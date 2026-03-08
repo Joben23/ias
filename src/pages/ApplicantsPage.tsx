@@ -28,22 +28,22 @@ export default function ApplicantsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-display font-bold text-foreground">Applicant Management</h1>
           <p className="text-muted-foreground text-sm mt-1">{applicants.length} total applicants in the system</p>
         </div>
-        <button className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
           <Plus className="w-4 h-4" />
           New Applicant
         </button>
       </div>
 
       {/* Filters */}
-      <div className="card-elevated p-4 space-y-4">
+      <div className="card-elevated p-4 space-y-4 overflow-hidden">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
@@ -53,7 +53,7 @@ export default function ApplicantsPage() {
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted border-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setViewMode('cards')}
               className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${viewMode === 'cards' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
@@ -69,12 +69,12 @@ export default function ApplicantsPage() {
           </div>
         </div>
 
-        {/* Status filters - horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-          <div className="flex gap-2 min-w-max pb-1">
+        {/* Status filters */}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 pb-1">
             <button
               onClick={() => setStatusFilter('All')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${statusFilter === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${statusFilter === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
             >
               All
             </button>
@@ -82,7 +82,7 @@ export default function ApplicantsPage() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${statusFilter === status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${statusFilter === status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
               >
                 {status}
               </button>
@@ -90,12 +90,12 @@ export default function ApplicantsPage() {
           </div>
         </div>
 
-        {/* Position filters - horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-          <div className="flex gap-2 min-w-max pb-1">
+        {/* Position filters */}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 pb-1">
             <button
               onClick={() => setPositionFilter('All')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${positionFilter === 'All' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${positionFilter === 'All' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
             >
               All Positions
             </button>
@@ -103,7 +103,7 @@ export default function ApplicantsPage() {
               <button
                 key={pos}
                 onClick={() => setPositionFilter(pos)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${positionFilter === pos ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${positionFilter === pos ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
               >
                 {pos}
               </button>
@@ -125,10 +125,10 @@ export default function ApplicantsPage() {
           )}
         </div>
       ) : (
-        <div className="w-full overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+        <div className="overflow-x-auto">
           <div className="flex gap-4 min-w-max pb-4">
-            {pipelineGroups.map((group, gi) => (
-              <div key={group.status} className="shrink-0 w-[260px] sm:w-[280px]">
+            {pipelineGroups.map((group) => (
+              <div key={group.status} className="shrink-0 w-[260px]">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-semibold text-foreground">{group.status}</span>
                   <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
