@@ -41,10 +41,13 @@ export default function ApplicantsPage() {
           <h1 className="text-2xl font-display font-bold text-foreground">Applicant Management</h1>
           <p className="text-muted-foreground text-sm mt-1">{applicants.length} total applicants in the system</p>
         </div>
-        <button className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
+        <button onClick={() => setDialogOpen(true)} className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
           <Plus className="w-4 h-4" />
           New Applicant
         </button>
+      </div>
+
+      <NewApplicantDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddApplicant} />
       </div>
 
       {/* Filters */}
