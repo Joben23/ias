@@ -4,11 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { HeartPulse, Mail, Lock } from 'lucide-react';
+import { HeartPulse, User, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,10 +16,11 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const email = `${username}@medhire.local`;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
+      toast({ title: 'Login failed', description: 'Invalid username or password.', variant: 'destructive' });
     } else {
       navigate('/');
     }
@@ -38,10 +39,10 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="card-elevated p-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="username">Username</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="you@hospital.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input id="username" type="text" placeholder="" value={username} onChange={e => setUsername(e.target.value)} className="pl-10" required />
             </div>
           </div>
           <div className="space-y-2">
