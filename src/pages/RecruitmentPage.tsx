@@ -134,6 +134,8 @@ export default function RecruitmentPage() {
           )}
         </div>
       </div>
+
+      <NewJobPostingDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={job => setJobs(prev => [job, ...prev])} />
     </div>
   );
 }
