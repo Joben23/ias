@@ -48,7 +48,7 @@ export default function SignupPage() {
             <Label htmlFor="fullName">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="fullName" placeholder="Benjo Sion" value={fullName} onChange={e => setFullName(e.target.value)} className="pl-10" required />
+              <Input id="fullName" placeholder="" value={fullName} onChange={e => setFullName(e.target.value)} className="pl-10" required />
             </div>
           </div>
           <div className="space-y-2">
