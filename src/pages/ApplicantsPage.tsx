@@ -69,42 +69,46 @@ export default function ApplicantsPage() {
           </div>
         </div>
 
-        {/* Status filters */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setStatusFilter('All')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
-          >
-            All
-          </button>
-          {statusFilters.map(status => (
+        {/* Status filters - horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-2 min-w-max pb-1">
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setStatusFilter('All')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${statusFilter === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
             >
-              {status}
+              All
             </button>
-          ))}
+            {statusFilters.map(status => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${statusFilter === status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Position filters */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setPositionFilter('All')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${positionFilter === 'All' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
-          >
-            All Positions
-          </button>
-          {positionFilters.map(pos => (
+        {/* Position filters - horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-2 min-w-max pb-1">
             <button
-              key={pos}
-              onClick={() => setPositionFilter(pos)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${positionFilter === pos ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setPositionFilter('All')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${positionFilter === 'All' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
             >
-              {pos}
+              All Positions
             </button>
-          ))}
+            {positionFilters.map(pos => (
+              <button
+                key={pos}
+                onClick={() => setPositionFilter(pos)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${positionFilter === pos ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
