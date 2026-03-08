@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
   HeartPulse, Bell, Search, ChevronRight, Moon, Sun,
 } from 'lucide-react';
+import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import {
   Sidebar,
   SidebarContent,
