@@ -1,5 +1,7 @@
-import { recognitions } from '@/data/sampleData';
+import { useState } from 'react';
+import { recognitions as initialRecognitions, Recognition } from '@/data/sampleData';
 import { RecognitionCard } from '@/components/hr/RecognitionCard';
+import { NewRecognitionDialog } from '@/components/hr/NewRecognitionDialog';
 import { motion } from 'framer-motion';
 import { Award, Trophy, Star, Medal, Heart, Plus, Sparkles } from 'lucide-react';
 
