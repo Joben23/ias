@@ -1,6 +1,8 @@
-import { jobPostings, applicants } from '@/data/sampleData';
+import { useState } from 'react';
+import { jobPostings as initialJobPostings, applicants, type JobPosting } from '@/data/sampleData';
 import { motion } from 'framer-motion';
 import { Briefcase, Users, Calendar, MapPin, Clock, Plus, ChevronRight, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
+import NewJobPostingDialog from '@/components/hr/NewJobPostingDialog';
 
 const statusConfig = {
   Open: { icon: CheckCircle2, color: 'text-pipeline-hired', bg: 'bg-pipeline-hired/10' },
@@ -9,6 +11,8 @@ const statusConfig = {
 };
 
 export default function RecruitmentPage() {
+  const [jobs, setJobs] = useState<JobPosting[]>(initialJobPostings);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const interviewApplicants = applicants.filter(a => a.status === 'Interview Scheduled');
 
   return (
@@ -18,7 +22,7 @@ export default function RecruitmentPage() {
           <h1 className="text-2xl font-display font-bold text-foreground">Recruitment Management</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage job postings, screening, and interviews</p>
         </div>
-        <button className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <button onClick={() => setDialogOpen(true)} className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" />
           Post New Job
         </button>
@@ -53,7 +57,7 @@ export default function RecruitmentPage() {
       <div>
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Active Job Postings</h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {jobPostings.map((job, i) => {
+          {jobs.map((job, i) => {
             const config = statusConfig[job.status];
             const StatusIcon = config.icon;
             return (
@@ -130,6 +134,8 @@ export default function RecruitmentPage() {
           )}
         </div>
       </div>
+
+      <NewJobPostingDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={job => setJobs(prev => [job, ...prev])} />
     </div>
   );
 }
