@@ -125,20 +125,22 @@ export default function ApplicantsPage() {
           )}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {pipelineGroups.map((group, gi) => (
-            <div key={group.status} className="shrink-0 w-[280px]">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-semibold text-foreground">{group.status}</span>
-                <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
+        <div className="w-full overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+          <div className="flex gap-4 min-w-max pb-4">
+            {pipelineGroups.map((group, gi) => (
+              <div key={group.status} className="shrink-0 w-[260px] sm:w-[280px]">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-semibold text-foreground">{group.status}</span>
+                  <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {group.applicants.map((app, i) => (
+                    <ApplicantCard key={app.id} applicant={app} index={i} />
+                  ))}
+                </div>
               </div>
-              <div className="space-y-2">
-                {group.applicants.map((app, i) => (
-                  <ApplicantCard key={app.id} applicant={app} index={i} />
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
