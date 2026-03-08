@@ -57,7 +57,7 @@ export default function RecruitmentPage() {
       <div>
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Active Job Postings</h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {jobPostings.map((job, i) => {
+          {jobs.map((job, i) => {
             const config = statusConfig[job.status];
             const StatusIcon = config.icon;
             return (
