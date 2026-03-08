@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { applicants, ApplicantStatus, Position } from '@/data/sampleData';
+import { applicants as initialApplicants, Applicant, ApplicantStatus, Position } from '@/data/sampleData';
 import { ApplicantCard } from '@/components/hr/ApplicantCard';
+import { NewApplicantDialog } from '@/components/hr/NewApplicantDialog';
 import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Users, SlidersHorizontal } from 'lucide-react';
 
@@ -8,10 +9,16 @@ const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortli
 const positionFilters: Position[] = ['Doctor', 'Nurse', 'Medical Technologist', 'Pharmacist', 'Administrative Staff', 'Security Personnel', 'Maintenance Staff'];
 
 export default function ApplicantsPage() {
+  const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicantStatus | 'All'>('All');
   const [positionFilter, setPositionFilter] = useState<Position | 'All'>('All');
   const [viewMode, setViewMode] = useState<'cards' | 'pipeline'>('cards');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleAddApplicant = (applicant: Applicant) => {
+    setApplicants(prev => [applicant, ...prev]);
+  };
 
   const filtered = applicants.filter(a => {
     const matchesSearch = a.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,11 +41,14 @@ export default function ApplicantsPage() {
           <h1 className="text-2xl font-display font-bold text-foreground">Applicant Management</h1>
           <p className="text-muted-foreground text-sm mt-1">{applicants.length} total applicants in the system</p>
         </div>
-        <button className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
+        <button onClick={() => setDialogOpen(true)} className="gradient-primary text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
           <Plus className="w-4 h-4" />
           New Applicant
         </button>
       </div>
+
+      <NewApplicantDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddApplicant} />
+
 
       {/* Filters */}
       <div className="card-elevated p-4 space-y-4 overflow-hidden">
