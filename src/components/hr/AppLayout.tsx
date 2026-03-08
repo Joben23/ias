@@ -134,9 +134,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Bell className="w-4 h-4 text-muted-foreground" />
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
               </button>
-              <div className="gradient-primary w-9 h-9 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-xs">
-                HR
-              </div>
+              <ProfileDropdown />
             </div>
           </header>
 
