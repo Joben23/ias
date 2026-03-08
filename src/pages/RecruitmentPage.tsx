@@ -1,6 +1,8 @@
-import { jobPostings, applicants } from '@/data/sampleData';
+import { useState } from 'react';
+import { jobPostings as initialJobPostings, applicants, type JobPosting } from '@/data/sampleData';
 import { motion } from 'framer-motion';
 import { Briefcase, Users, Calendar, MapPin, Clock, Plus, ChevronRight, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
+import NewJobPostingDialog from '@/components/hr/NewJobPostingDialog';
 
 const statusConfig = {
   Open: { icon: CheckCircle2, color: 'text-pipeline-hired', bg: 'bg-pipeline-hired/10' },
@@ -9,6 +11,8 @@ const statusConfig = {
 };
 
 export default function RecruitmentPage() {
+  const [jobs, setJobs] = useState<JobPosting[]>(initialJobPostings);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const interviewApplicants = applicants.filter(a => a.status === 'Interview Scheduled');
 
   return (
