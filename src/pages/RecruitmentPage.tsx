@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { jobPostings as initialJobPostings, applicants, type JobPosting } from '@/data/sampleData';
 import { motion } from 'framer-motion';
 import { Briefcase, Users, Calendar, MapPin, Clock, Plus, ChevronRight, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
 import NewJobPostingDialog from '@/components/hr/NewJobPostingDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusConfig = {
   Open: { icon: CheckCircle2, color: 'text-pipeline-hired', bg: 'bg-pipeline-hired/10' },
@@ -14,6 +15,53 @@ export default function RecruitmentPage() {
   const [jobs, setJobs] = useState<JobPosting[]>(initialJobPostings);
   const [dialogOpen, setDialogOpen] = useState(false);
   const interviewApplicants = applicants.filter(a => a.status === 'Interview Scheduled');
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const { data } = await supabase
+        .from('job_postings')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped: JobPosting[] = data.map(row => ({
+          id: row.id,
+          title: row.title,
+          department: row.department as JobPosting['department'],
+          position: row.position as JobPosting['position'],
+          employmentType: row.employment_type as JobPosting['employmentType'],
+          description: row.description,
+          requirements: row.requirements || [],
+          applicantCount: row.applicant_count,
+          postedDate: row.posted_date,
+          closingDate: row.closing_date || 'TBD',
+          status: row.status as JobPosting['status'],
+        }));
+        setJobs(mapped);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  const handleAddJob = async (job: JobPosting) => {
+    const { data } = await supabase.from('job_postings').insert({
+      title: job.title,
+      department: job.department,
+      position: job.position,
+      employment_type: job.employmentType,
+      description: job.description,
+      requirements: job.requirements,
+      applicant_count: job.applicantCount,
+      posted_date: job.postedDate,
+      closing_date: job.closingDate,
+      status: job.status,
+    }).select().single();
+
+    if (data) {
+      setJobs(prev => [{ ...job, id: data.id }, ...prev]);
+    } else {
+      setJobs(prev => [job, ...prev]);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -135,7 +183,7 @@ export default function RecruitmentPage() {
         </div>
       </div>
 
-      <NewJobPostingDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={job => setJobs(prev => [job, ...prev])} />
+      <NewJobPostingDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddJob} />
     </div>
   );
 }

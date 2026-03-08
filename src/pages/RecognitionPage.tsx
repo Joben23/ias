@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { recognitions as initialRecognitions, Recognition } from '@/data/sampleData';
 import { RecognitionCard } from '@/components/hr/RecognitionCard';
 import { NewRecognitionDialog } from '@/components/hr/NewRecognitionDialog';
 import { motion } from 'framer-motion';
 import { Award, Trophy, Star, Medal, Heart, Plus, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const awardCategories = [
   { label: 'Employee of the Month', icon: Trophy, gradient: 'gradient-warm', count: 1 },
@@ -16,8 +17,47 @@ export default function RecognitionPage() {
   const [recognitions, setRecognitions] = useState<Recognition[]>(initialRecognitions);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleAddRecognition = (rec: Recognition) => {
-    setRecognitions(prev => [rec, ...prev]);
+  useEffect(() => {
+    const fetchRecognitions = async () => {
+      const { data } = await supabase
+        .from('recognitions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped: Recognition[] = data.map(row => ({
+          id: row.id,
+          employeeName: row.employee_name,
+          position: (row.position || 'Doctor') as Recognition['position'],
+          department: (row.department || 'Administration') as Recognition['department'],
+          awardType: row.award_type,
+          description: row.description || '',
+          date: row.date,
+          likes: row.likes,
+          comments: row.comments,
+        }));
+        setRecognitions(mapped);
+      }
+    };
+    fetchRecognitions();
+  }, []);
+
+  const handleAddRecognition = async (rec: Recognition) => {
+    const { data } = await supabase.from('recognitions').insert({
+      employee_name: rec.employeeName,
+      position: rec.position,
+      department: rec.department,
+      award_type: rec.awardType,
+      description: rec.description,
+      date: rec.date,
+      likes: rec.likes,
+      comments: rec.comments,
+    }).select().single();
+
+    if (data) {
+      setRecognitions(prev => [{ ...rec, id: data.id }, ...prev]);
+    } else {
+      setRecognitions(prev => [rec, ...prev]);
+    }
   };
 
   return (

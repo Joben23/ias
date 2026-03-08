@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { applicants as initialApplicants, Applicant, ApplicantStatus, Position } from '@/data/sampleData';
 import { ApplicantCard } from '@/components/hr/ApplicantCard';
 import { NewApplicantDialog } from '@/components/hr/NewApplicantDialog';
 import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Users, SlidersHorizontal } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Hired', 'Rejected'];
 const positionFilters: Position[] = ['Doctor', 'Nurse', 'Medical Technologist', 'Pharmacist', 'Administrative Staff', 'Security Personnel', 'Maintenance Staff'];
@@ -16,8 +17,59 @@ export default function ApplicantsPage() {
   const [viewMode, setViewMode] = useState<'cards' | 'pipeline'>('cards');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleAddApplicant = (applicant: Applicant) => {
-    setApplicants(prev => [applicant, ...prev]);
+  useEffect(() => {
+    const fetchApplicants = async () => {
+      const { data, error } = await supabase
+        .from('applicants')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped: Applicant[] = data.map(row => ({
+          id: row.id,
+          fullName: row.full_name,
+          email: row.email,
+          phone: row.phone || '',
+          education: row.education || '',
+          certifications: row.certifications || [],
+          positionApplied: row.position_applied as Position,
+          department: row.department as Applicant['department'],
+          applicationDate: row.application_date,
+          status: row.status as ApplicantStatus,
+          experience: row.experience || '',
+          resumeFile: row.resume_file || undefined,
+          rating: row.rating ? Number(row.rating) : undefined,
+        }));
+        setApplicants(mapped);
+      }
+    };
+    fetchApplicants();
+  }, []);
+
+  const handleAddApplicant = async (applicant: Applicant) => {
+    const { data, error } = await supabase.from('applicants').insert({
+      full_name: applicant.fullName,
+      email: applicant.email,
+      phone: applicant.phone,
+      education: applicant.education,
+      certifications: applicant.certifications,
+      position_applied: applicant.positionApplied,
+      department: applicant.department,
+      application_date: applicant.applicationDate,
+      status: applicant.status,
+      experience: applicant.experience,
+      resume_file: applicant.resumeFile,
+      rating: applicant.rating,
+    }).select().single();
+
+    if (data) {
+      const newApplicant: Applicant = {
+        ...applicant,
+        id: data.id,
+      };
+      setApplicants(prev => [newApplicant, ...prev]);
+    } else {
+      setApplicants(prev => [applicant, ...prev]);
+    }
   };
 
   const filtered = applicants.filter(a => {
