@@ -6,18 +6,24 @@ Deno.serve(async () => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Check if admin already exists
+  // Find existing admin
   const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-  const adminExists = existingUsers?.users?.some(u => u.email === "admin@medhire.com");
+  const oldAdmin = existingUsers?.users?.find(u => u.email === "admin@medhire.com");
+  const newAdmin = existingUsers?.users?.find(u => u.email === "admin@medhire.local");
 
-  if (adminExists) {
-    return new Response(JSON.stringify({ message: "Admin already exists" }), {
+  if (newAdmin) {
+    return new Response(JSON.stringify({ message: "Admin with username 'admin' already exists" }), {
       headers: { "Content-Type": "application/json" },
     });
   }
 
+  // Delete old admin if exists, then create new one
+  if (oldAdmin) {
+    await supabaseAdmin.auth.admin.deleteUser(oldAdmin.id);
+  }
+
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email: "admin@medhire.com",
+    email: "admin@medhire.local",
     password: "admin123",
     email_confirm: true,
     user_metadata: { full_name: "System Admin" },
@@ -30,7 +36,6 @@ Deno.serve(async () => {
     });
   }
 
-  // Update profile with admin role
   if (data.user) {
     await supabaseAdmin.from("profiles").update({
       role: "Admin",
@@ -39,7 +44,7 @@ Deno.serve(async () => {
     }).eq("id", data.user.id);
   }
 
-  return new Response(JSON.stringify({ message: "Admin created successfully" }), {
+  return new Response(JSON.stringify({ message: "Admin created with username 'admin'" }), {
     headers: { "Content-Type": "application/json" },
   });
 });
