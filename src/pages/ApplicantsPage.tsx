@@ -9,10 +9,16 @@ const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortli
 const positionFilters: Position[] = ['Doctor', 'Nurse', 'Medical Technologist', 'Pharmacist', 'Administrative Staff', 'Security Personnel', 'Maintenance Staff'];
 
 export default function ApplicantsPage() {
+  const [applicants, setApplicants] = useState<Applicant[]>(initialApplicants);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicantStatus | 'All'>('All');
   const [positionFilter, setPositionFilter] = useState<Position | 'All'>('All');
   const [viewMode, setViewMode] = useState<'cards' | 'pipeline'>('cards');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleAddApplicant = (applicant: Applicant) => {
+    setApplicants(prev => [applicant, ...prev]);
+  };
 
   const filtered = applicants.filter(a => {
     const matchesSearch = a.fullName.toLowerCase().includes(search.toLowerCase()) ||
