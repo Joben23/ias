@@ -54,10 +54,6 @@ export default function LoginPage() {
           <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
           </Button>
-          <div className="flex justify-between text-sm">
-            <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
-            <Link to="/signup" className="text-primary hover:underline">Create account</Link>
-          </div>
         </form>
       </div>
     </div>
