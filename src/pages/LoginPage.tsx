@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,7 @@ export default function LoginPage() {
             <HeartPulse className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">Welcome to MedHire</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sign in to your HR account</p>
+          <p className="text-muted-foreground text-sm mt-1">Admin Portal — Authorized Access Only</p>
         </div>
 
         <form onSubmit={handleLogin} className="card-elevated p-6 space-y-4">
@@ -54,10 +54,6 @@ export default function LoginPage() {
           <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
           </Button>
-          <div className="flex justify-between text-sm">
-            <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
-            <Link to="/signup" className="text-primary hover:underline">Create account</Link>
-          </div>
         </form>
       </div>
     </div>

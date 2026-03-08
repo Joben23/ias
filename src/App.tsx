@@ -14,9 +14,6 @@ import OnboardingPage from "./pages/OnboardingPage";
 import PerformancePage from "./pages/PerformancePage";
 import RecognitionPage from "./pages/RecognitionPage";
 import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,9 +28,6 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route
                 path="/*"
                 element={
