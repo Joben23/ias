@@ -55,7 +55,7 @@ export default function SignupPage() {
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="you@hospital.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+              <Input id="email" type="email" placeholder="" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
             </div>
           </div>
           <div className="space-y-2">
