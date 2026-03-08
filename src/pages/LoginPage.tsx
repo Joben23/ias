@@ -33,7 +33,7 @@ export default function LoginPage() {
             <HeartPulse className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">Welcome to MedHire</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sign in to your HR account</p>
+          <p className="text-muted-foreground text-sm mt-1">Admin Portal — Authorized Access Only</p>
         </div>
 
         <form onSubmit={handleLogin} className="card-elevated p-6 space-y-4">
