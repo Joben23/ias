@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applicants: {
+        Row: {
+          application_date: string
+          certifications: string[] | null
+          created_at: string
+          department: string
+          education: string | null
+          email: string
+          experience: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          position_applied: string
+          rating: number | null
+          resume_file: string | null
+          status: string
+        }
+        Insert: {
+          application_date?: string
+          certifications?: string[] | null
+          created_at?: string
+          department: string
+          education?: string | null
+          email: string
+          experience?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          position_applied: string
+          rating?: number | null
+          resume_file?: string | null
+          status?: string
+        }
+        Update: {
+          application_date?: string
+          certifications?: string[] | null
+          created_at?: string
+          department?: string
+          education?: string | null
+          email?: string
+          experience?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          position_applied?: string
+          rating?: number | null
+          resume_file?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      job_postings: {
+        Row: {
+          applicant_count: number
+          closing_date: string | null
+          created_at: string
+          department: string
+          description: string
+          employment_type: string
+          id: string
+          position: string
+          posted_date: string
+          requirements: string[] | null
+          status: string
+          title: string
+        }
+        Insert: {
+          applicant_count?: number
+          closing_date?: string | null
+          created_at?: string
+          department: string
+          description: string
+          employment_type?: string
+          id?: string
+          position?: string
+          posted_date?: string
+          requirements?: string[] | null
+          status?: string
+          title: string
+        }
+        Update: {
+          applicant_count?: number
+          closing_date?: string | null
+          created_at?: string
+          department?: string
+          description?: string
+          employment_type?: string
+          id?: string
+          position?: string
+          posted_date?: string
+          requirements?: string[] | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      recognitions: {
+        Row: {
+          award_type: string
+          comments: number
+          created_at: string
+          date: string
+          department: string | null
+          description: string | null
+          employee_name: string
+          id: string
+          likes: number
+          position: string | null
+        }
+        Insert: {
+          award_type: string
+          comments?: number
+          created_at?: string
+          date?: string
+          department?: string | null
+          description?: string | null
+          employee_name: string
+          id?: string
+          likes?: number
+          position?: string | null
+        }
+        Update: {
+          award_type?: string
+          comments?: number
+          created_at?: string
+          date?: string
+          department?: string | null
+          description?: string | null
+          employee_name?: string
+          id?: string
+          likes?: number
+          position?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
