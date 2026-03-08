@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { applicants, ApplicantStatus, Position } from '@/data/sampleData';
+import { applicants as initialApplicants, Applicant, ApplicantStatus, Position } from '@/data/sampleData';
 import { ApplicantCard } from '@/components/hr/ApplicantCard';
+import { NewApplicantDialog } from '@/components/hr/NewApplicantDialog';
 import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Users, SlidersHorizontal } from 'lucide-react';
 
