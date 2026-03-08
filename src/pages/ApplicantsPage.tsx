@@ -125,10 +125,9 @@ export default function ApplicantsPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <div className="flex gap-4 min-w-max pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {pipelineGroups.map((group) => (
-              <div key={group.status} className="shrink-0 w-[260px]">
+              <div key={group.status} className="min-w-0">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-semibold text-foreground">{group.status}</span>
                   <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
