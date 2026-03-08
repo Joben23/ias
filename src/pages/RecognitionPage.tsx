@@ -13,6 +13,13 @@ const awardCategories = [
 ];
 
 export default function RecognitionPage() {
+  const [recognitions, setRecognitions] = useState<Recognition[]>(initialRecognitions);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleAddRecognition = (rec: Recognition) => {
+    setRecognitions(prev => [rec, ...prev]);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -20,11 +27,13 @@ export default function RecognitionPage() {
           <h1 className="text-2xl font-display font-bold text-foreground">Social Recognition</h1>
           <p className="text-muted-foreground text-sm mt-1">Celebrate achievements and foster positive work culture</p>
         </div>
-        <button className="gradient-warm text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
+        <button onClick={() => setDialogOpen(true)} className="gradient-warm text-primary-foreground px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity">
           <Sparkles className="w-4 h-4" />
           Give Recognition
         </button>
       </div>
+
+      <NewRecognitionDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddRecognition} />
 
       {/* Award categories */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
