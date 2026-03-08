@@ -139,7 +139,6 @@ export default function ApplicantsPage() {
                 </div>
               </div>
             ))}
-          </div>
         </div>
       )}
     </div>
