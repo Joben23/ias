@@ -14,6 +14,8 @@ import OnboardingPage from "./pages/OnboardingPage";
 import PerformancePage from "./pages/PerformancePage";
 import RecognitionPage from "./pages/RecognitionPage";
 import LoginPage from "./pages/LoginPage";
+import CareersPage from "./pages/CareersPage";
+import JobApplicationPage from "./pages/JobApplicationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +29,12 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              {/* Public routes */}
+              <Route path="/careers" element={<CareersPage />} />
+              <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
               <Route path="/login" element={<LoginPage />} />
+              
+              {/* Protected admin/HR routes */}
               <Route
                 path="/*"
                 element={
