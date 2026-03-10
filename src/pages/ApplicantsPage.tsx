@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { applicants as initialApplicants, Applicant, ApplicantStatus, Position } from '@/data/sampleData';
 import { ApplicantCard } from '@/components/hr/ApplicantCard';
+import { ApplicantDetailDialog } from '@/components/hr/ApplicantDetailDialog';
 import { NewApplicantDialog } from '@/components/hr/NewApplicantDialog';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Users, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, Users, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Hired', 'Rejected'];
@@ -16,10 +17,12 @@ export default function ApplicantsPage() {
   const [positionFilter, setPositionFilter] = useState<Position | 'All'>('All');
   const [viewMode, setViewMode] = useState<'cards' | 'pipeline'>('cards');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
     const fetchApplicants = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('applicants')
         .select('*')
         .order('created_at', { ascending: false });
@@ -46,7 +49,7 @@ export default function ApplicantsPage() {
   }, []);
 
   const handleAddApplicant = async (applicant: Applicant) => {
-    const { data, error } = await supabase.from('applicants').insert({
+    const { data } = await supabase.from('applicants').insert({
       full_name: applicant.fullName,
       email: applicant.email,
       phone: applicant.phone,
@@ -62,14 +65,22 @@ export default function ApplicantsPage() {
     }).select().single();
 
     if (data) {
-      const newApplicant: Applicant = {
-        ...applicant,
-        id: data.id,
-      };
+      const newApplicant: Applicant = { ...applicant, id: data.id };
       setApplicants(prev => [newApplicant, ...prev]);
     } else {
       setApplicants(prev => [applicant, ...prev]);
     }
+  };
+
+  const handleStatusChange = (id: string, status: ApplicantStatus) => {
+    setApplicants(prev =>
+      prev.map(a => a.id === id ? { ...a, status } : a)
+    );
+  };
+
+  const handleCardClick = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setDetailOpen(true);
   };
 
   const filtered = applicants.filter(a => {
@@ -80,7 +91,6 @@ export default function ApplicantsPage() {
     return matchesSearch && matchesStatus && matchesPosition;
   });
 
-  // Group by status for pipeline view
   const pipelineGroups = statusFilters.map(status => ({
     status,
     applicants: applicants.filter(a => a.status === status),
@@ -100,7 +110,13 @@ export default function ApplicantsPage() {
       </div>
 
       <NewApplicantDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddApplicant} />
-
+      <ApplicantDetailDialog
+        applicant={selectedApplicant}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onStatusChange={handleStatusChange}
+        onHire={() => {}}
+      />
 
       {/* Filters */}
       <div className="card-elevated p-4 space-y-4 overflow-hidden">
@@ -178,7 +194,9 @@ export default function ApplicantsPage() {
       {viewMode === 'cards' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((app, i) => (
-            <ApplicantCard key={app.id} applicant={app} index={i} />
+            <div key={app.id} onClick={() => handleCardClick(app)} className="cursor-pointer">
+              <ApplicantCard applicant={app} index={i} />
+            </div>
           ))}
           {filtered.length === 0 && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
@@ -188,19 +206,21 @@ export default function ApplicantsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {pipelineGroups.map((group) => (
-              <div key={group.status} className="min-w-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-semibold text-foreground">{group.status}</span>
-                  <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {group.applicants.map((app, i) => (
-                    <ApplicantCard key={app.id} applicant={app} index={i} />
-                  ))}
-                </div>
+          {pipelineGroups.map((group) => (
+            <div key={group.status} className="min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-semibold text-foreground">{group.status}</span>
+                <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{group.applicants.length}</span>
               </div>
-            ))}
+              <div className="space-y-2">
+                {group.applicants.map((app, i) => (
+                  <div key={app.id} onClick={() => handleCardClick(app)} className="cursor-pointer">
+                    <ApplicantCard applicant={app} index={i} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
