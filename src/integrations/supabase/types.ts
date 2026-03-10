@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           application_date: string
           certifications: string[] | null
+          cover_letter: string | null
           created_at: string
           department: string
           education: string | null
@@ -25,15 +26,18 @@ export type Database = {
           experience: string | null
           full_name: string
           id: string
+          job_posting_id: string | null
           phone: string | null
           position_applied: string
           rating: number | null
           resume_file: string | null
+          skills: string[] | null
           status: string
         }
         Insert: {
           application_date?: string
           certifications?: string[] | null
+          cover_letter?: string | null
           created_at?: string
           department: string
           education?: string | null
@@ -41,15 +45,18 @@ export type Database = {
           experience?: string | null
           full_name: string
           id?: string
+          job_posting_id?: string | null
           phone?: string | null
           position_applied: string
           rating?: number | null
           resume_file?: string | null
+          skills?: string[] | null
           status?: string
         }
         Update: {
           application_date?: string
           certifications?: string[] | null
+          cover_letter?: string | null
           created_at?: string
           department?: string
           education?: string | null
@@ -57,13 +64,76 @@ export type Database = {
           experience?: string | null
           full_name?: string
           id?: string
+          job_posting_id?: string | null
           phone?: string | null
           position_applied?: string
           rating?: number | null
           resume_file?: string | null
+          skills?: string[] | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "applicants_job_posting_id_fkey"
+            columns: ["job_posting_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          applicant_id: string | null
+          created_at: string | null
+          department: string
+          email: string
+          employee_id: string
+          full_name: string
+          id: string
+          phone: string | null
+          position: string
+          start_date: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          applicant_id?: string | null
+          created_at?: string | null
+          department: string
+          email: string
+          employee_id: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          position: string
+          start_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          applicant_id?: string | null
+          created_at?: string | null
+          department?: string
+          email?: string
+          employee_id?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          position?: string
+          start_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_postings: {
         Row: {
@@ -74,6 +144,7 @@ export type Database = {
           description: string
           employment_type: string
           id: string
+          location: string | null
           position: string
           posted_date: string
           requirements: string[] | null
@@ -88,6 +159,7 @@ export type Database = {
           description: string
           employment_type?: string
           id?: string
+          location?: string | null
           position?: string
           posted_date?: string
           requirements?: string[] | null
@@ -102,6 +174,7 @@ export type Database = {
           description?: string
           employment_type?: string
           id?: string
+          location?: string | null
           position?: string
           posted_date?: string
           requirements?: string[] | null
@@ -185,15 +258,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "hr" | "employee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -320,6 +417,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "hr", "employee"],
+    },
   },
 } as const
