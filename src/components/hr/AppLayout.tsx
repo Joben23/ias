@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
-  HeartPulse, Bell, Search, ChevronRight, Moon, Sun,
+  HeartPulse, Bell, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import {
