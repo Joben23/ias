@@ -23,12 +23,17 @@ import { NavLink } from '@/components/NavLink';
 import { useTheme } from '@/components/ThemeProvider';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/applicants', label: 'Applicants', icon: Users },
-  { path: '/recruitment', label: 'Recruitment', icon: Briefcase },
-  { path: '/onboarding', label: 'Onboarding', icon: UserPlus },
-  { path: '/performance', label: 'Performance', icon: BarChart3 },
-  { path: '/recognition', label: 'Recognition', icon: Award },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/dashboard/applicants', label: 'Applicants', icon: Users },
+  { path: '/dashboard/recruitment', label: 'Recruitment', icon: Briefcase },
+  { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
+  { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
+  { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
+];
+
+const externalLinks = [
+  { path: '/', label: 'Landing Page', icon: HeartPulse },
+  { path: '/careers', label: 'Careers Page', icon: Briefcase },
 ];
 
 function AppSidebar() {

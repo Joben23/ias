@@ -22,7 +22,7 @@ export default function LoginPage() {
     if (error) {
       toast({ title: 'Login failed', description: 'Invalid username or password.', variant: 'destructive' });
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
