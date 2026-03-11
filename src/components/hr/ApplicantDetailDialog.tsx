@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import {
   User, Mail, Phone, Briefcase, Building2, Calendar, Star, FileText, Download,
-  CheckCircle2, Loader2,
+  CheckCircle2, Loader2, CalendarCheck,
 } from 'lucide-react';
+import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
 
 const statuses: ApplicantStatus[] = [
   'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Hired', 'Rejected',
