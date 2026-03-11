@@ -136,7 +136,7 @@ function ThemeToggle() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const currentPage = navItems.find(n => n.path === location.pathname)?.label || 'Dashboard';
+  const currentPage = navItems.find(n => n.path === location.pathname)?.label || navItems.find(n => location.pathname.startsWith(n.path) && n.path !== '/dashboard')?.label || 'Dashboard';
 
   return (
     <SidebarProvider>
