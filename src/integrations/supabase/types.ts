@@ -135,6 +135,132 @@ export type Database = {
           },
         ]
       }
+      interview_evaluations: {
+        Row: {
+          applicant_id: string
+          comments: string | null
+          communication_skills: number
+          created_at: string
+          cultural_fit: number
+          evaluator_name: string
+          id: string
+          interview_id: string
+          medical_knowledge: number
+          overall_score: number | null
+          professionalism: number
+          recommendation: string
+          technical_skills: number
+        }
+        Insert: {
+          applicant_id: string
+          comments?: string | null
+          communication_skills: number
+          created_at?: string
+          cultural_fit: number
+          evaluator_name: string
+          id?: string
+          interview_id: string
+          medical_knowledge: number
+          overall_score?: number | null
+          professionalism: number
+          recommendation?: string
+          technical_skills: number
+        }
+        Update: {
+          applicant_id?: string
+          comments?: string | null
+          communication_skills?: number
+          created_at?: string
+          cultural_fit?: number
+          evaluator_name?: string
+          id?: string
+          interview_id?: string
+          medical_knowledge?: number
+          overall_score?: number | null
+          professionalism?: number
+          recommendation?: string
+          technical_skills?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_evaluations_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_evaluations_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          applicant_id: string
+          created_at: string
+          id: string
+          interview_date: string
+          interview_time: string
+          interview_type: string
+          job_posting_id: string | null
+          location: string | null
+          meeting_link: string | null
+          notes: string | null
+          panel_members: string[] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          created_at?: string
+          id?: string
+          interview_date: string
+          interview_time: string
+          interview_type?: string
+          job_posting_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          panel_members?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          created_at?: string
+          id?: string
+          interview_date?: string
+          interview_time?: string
+          interview_type?: string
+          job_posting_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          panel_members?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_job_posting_id_fkey"
+            columns: ["job_posting_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_postings: {
         Row: {
           applicant_count: number
