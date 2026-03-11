@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import {
   User, Mail, Phone, Briefcase, Building2, Calendar, Star, FileText, Download,
-  CheckCircle2, Loader2,
+  CheckCircle2, Loader2, CalendarCheck,
 } from 'lucide-react';
+import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
 
 const statuses: ApplicantStatus[] = [
   'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Hired', 'Rejected',
@@ -26,6 +27,7 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
   const [status, setStatus] = useState<ApplicantStatus>('Applied');
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [hiring, setHiring] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   useEffect(() => {
     if (applicant) {
@@ -161,6 +163,16 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
               </SelectContent>
             </Select>
 
+            {(status === 'Shortlisted' || status === 'Under Screening') && (
+              <Button
+                onClick={() => setScheduleOpen(true)}
+                variant="outline"
+                className="w-full"
+              >
+                <CalendarCheck className="w-4 h-4 mr-2" /> Schedule Interview
+              </Button>
+            )}
+
             {status === 'Selected' && (
               <Button
                 onClick={handleHire}
@@ -177,6 +189,16 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
           </div>
         </div>
       </DialogContent>
+
+      <ScheduleInterviewDialog
+        applicantId={applicant.id}
+        applicantName={applicant.fullName}
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        onScheduled={() => {
+          handleStatusChange('Interview Scheduled');
+        }}
+      />
     </Dialog>
   );
 }

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
-  HeartPulse, Bell, Search, ChevronRight, Moon, Sun,
+  HeartPulse, Bell, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import {
@@ -29,6 +29,8 @@ const navItems = [
   { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
   { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
+  { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
+  { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
 ];
 
 const externalLinks = [
