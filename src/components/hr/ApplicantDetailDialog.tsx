@@ -163,6 +163,16 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
               </SelectContent>
             </Select>
 
+            {(status === 'Shortlisted' || status === 'Under Screening') && (
+              <Button
+                onClick={() => setScheduleOpen(true)}
+                variant="outline"
+                className="w-full"
+              >
+                <CalendarCheck className="w-4 h-4 mr-2" /> Schedule Interview
+              </Button>
+            )}
+
             {status === 'Selected' && (
               <Button
                 onClick={handleHire}
@@ -179,6 +189,16 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
           </div>
         </div>
       </DialogContent>
+
+      <ScheduleInterviewDialog
+        applicantId={applicant.id}
+        applicantName={applicant.fullName}
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        onScheduled={() => {
+          handleStatusChange('Interview Scheduled');
+        }}
+      />
     </Dialog>
   );
 }

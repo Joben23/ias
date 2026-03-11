@@ -29,6 +29,8 @@ const navItems = [
   { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
   { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
+  { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
+  { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
 ];
 
 const externalLinks = [
