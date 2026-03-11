@@ -30,13 +30,14 @@ const App = () => (
           <AuthProvider>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<CareersPage />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
               <Route path="/login" element={<LoginPage />} />
               
               {/* Protected admin/HR routes */}
               <Route
-                path="/*"
+                path="/dashboard/*"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
@@ -53,6 +54,8 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>

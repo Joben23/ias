@@ -23,12 +23,17 @@ import { NavLink } from '@/components/NavLink';
 import { useTheme } from '@/components/ThemeProvider';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/applicants', label: 'Applicants', icon: Users },
-  { path: '/recruitment', label: 'Recruitment', icon: Briefcase },
-  { path: '/onboarding', label: 'Onboarding', icon: UserPlus },
-  { path: '/performance', label: 'Performance', icon: BarChart3 },
-  { path: '/recognition', label: 'Recognition', icon: Award },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/dashboard/applicants', label: 'Applicants', icon: Users },
+  { path: '/dashboard/recruitment', label: 'Recruitment', icon: Briefcase },
+  { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
+  { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
+  { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
+];
+
+const externalLinks = [
+  { path: '/', label: 'Landing Page', icon: HeartPulse },
+  { path: '/careers', label: 'Careers Page', icon: Briefcase },
 ];
 
 function AppSidebar() {
@@ -73,6 +78,30 @@ function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+            {!collapsed ? 'Public Pages' : ''}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {externalLinks.map(item => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild tooltip={item.label}>
+                    <Link
+                      to={item.path}
+                      target="_blank"
+                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {!collapsed && (
@@ -107,7 +136,7 @@ function ThemeToggle() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const currentPage = navItems.find(n => n.path === location.pathname)?.label || 'Dashboard';
+  const currentPage = navItems.find(n => n.path === location.pathname)?.label || navItems.find(n => location.pathname.startsWith(n.path) && n.path !== '/dashboard')?.label || 'Dashboard';
 
   return (
     <SidebarProvider>
