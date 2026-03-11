@@ -27,6 +27,7 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
   const [status, setStatus] = useState<ApplicantStatus>('Applied');
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [hiring, setHiring] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   useEffect(() => {
     if (applicant) {
