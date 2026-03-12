@@ -9,6 +9,9 @@ const statusColors: Record<string, string> = {
   'Shortlisted': 'bg-pipeline-interview/15 text-pipeline-interview border-pipeline-interview/30',
   'Interview Scheduled': 'bg-pipeline-interview/15 text-pipeline-interview border-pipeline-interview/30',
   'Selected': 'bg-pipeline-selected/15 text-pipeline-selected border-pipeline-selected/30',
+  'Offer Sent': 'bg-pipeline-offer-sent/15 text-pipeline-offer-sent border-pipeline-offer-sent/30',
+  'Offer Accepted': 'bg-pipeline-offer-accepted/15 text-pipeline-offer-accepted border-pipeline-offer-accepted/30',
+  'Offer Declined': 'bg-pipeline-offer-declined/15 text-pipeline-offer-declined border-pipeline-offer-declined/30',
   'Hired': 'bg-pipeline-hired/15 text-pipeline-hired border-pipeline-hired/30',
   'Rejected': 'bg-pipeline-rejected/15 text-pipeline-rejected border-pipeline-rejected/30',
 };
