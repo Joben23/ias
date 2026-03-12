@@ -1,4 +1,4 @@
-export type ApplicantStatus = 'Applied' | 'Under Screening' | 'Shortlisted' | 'Interview Scheduled' | 'Selected' | 'Hired' | 'Rejected';
+export type ApplicantStatus = 'Applied' | 'Under Screening' | 'Shortlisted' | 'Interview Scheduled' | 'Selected' | 'Offer Sent' | 'Offer Accepted' | 'Offer Declined' | 'Hired' | 'Rejected';
 
 export type Department = 'Emergency' | 'Surgery' | 'Pediatrics' | 'Cardiology' | 'Pharmacy' | 'Administration' | 'Security' | 'Maintenance' | 'ICU' | 'Radiology';
 
