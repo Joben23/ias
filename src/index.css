@@ -41,6 +41,9 @@
     --pipeline-screening: 35 85% 55%;
     --pipeline-interview: 280 60% 55%;
     --pipeline-selected: 168 65% 42%;
+    --pipeline-offer-sent: 45 85% 50%;
+    --pipeline-offer-accepted: 120 60% 45%;
+    --pipeline-offer-declined: 15 75% 50%;
     --pipeline-hired: 145 65% 42%;
     --pipeline-rejected: 0 65% 55%;
 
