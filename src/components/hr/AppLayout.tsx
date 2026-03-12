@@ -93,7 +93,6 @@ function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={item.label}>
                     <Link
                       to={item.path}
-                      target="_blank"
                       className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
                       <item.icon className="w-5 h-5" />
