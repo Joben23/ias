@@ -7,13 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import {
   User, Mail, Phone, Briefcase, Building2, Calendar, Star, FileText, Download,
-  CheckCircle2, Loader2, CalendarCheck,
+  CheckCircle2, Loader2, CalendarCheck, Send, DollarSign, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
+import { SendOfferDialog } from '@/components/hr/SendOfferDialog';
 
 const statuses: ApplicantStatus[] = [
-  'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Hired', 'Rejected',
+  'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected',
+  'Offer Sent', 'Offer Accepted', 'Offer Declined', 'Hired', 'Rejected',
 ];
+
+interface OfferData {
+  id: string;
+  salary_offer: string;
+  start_date: string;
+  contract_type: string;
+  offer_date: string;
+  status: string;
+}
 
 interface Props {
   applicant: Applicant | null;
@@ -28,11 +39,29 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [hiring, setHiring] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offer, setOffer] = useState<OfferData | null>(null);
+  const [acceptingOffer, setAcceptingOffer] = useState(false);
+
+  const fetchOffer = async (applicantId: string) => {
+    const { data } = await supabase
+      .from('job_offers')
+      .select('*')
+      .eq('applicant_id', applicantId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (data && data.length > 0) {
+      setOffer(data[0] as OfferData);
+    } else {
+      setOffer(null);
+    }
+  };
 
   useEffect(() => {
     if (applicant) {
       setStatus(applicant.status);
       setResumeUrl(null);
+      setOffer(null);
       if (applicant.resumeFile) {
         supabase.storage
           .from('resumes')
@@ -41,6 +70,7 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
             if (data) setResumeUrl(data.signedUrl);
           });
       }
+      fetchOffer(applicant.id);
     }
   }, [applicant]);
 
@@ -49,7 +79,6 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
   const handleStatusChange = async (newStatus: string) => {
     const s = newStatus as ApplicantStatus;
     setStatus(s);
-    // Update in DB
     await supabase.from('applicants').update({ status: s }).eq('id', applicant.id);
     onStatusChange(applicant.id, s);
     toast({ title: 'Status updated', description: `${applicant.fullName} moved to "${s}"` });
@@ -65,6 +94,9 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
       setStatus('Hired');
       onStatusChange(applicant.id, 'Hired');
       onHire(applicant);
+      if (offer) {
+        await supabase.from('job_offers').update({ status: 'Offer Accepted' }).eq('id', offer.id);
+      }
       toast({
         title: 'Applicant Hired!',
         description: `Employee account created. Username: ${data.username}, Password: ${data.password}`,
@@ -73,6 +105,44 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
       toast({ title: 'Hire failed', description: err.message || 'Something went wrong', variant: 'destructive' });
     }
     setHiring(false);
+  };
+
+  const handleAcceptOffer = async () => {
+    setAcceptingOffer(true);
+    try {
+      if (offer) {
+        await supabase.from('job_offers').update({ status: 'Offer Accepted' }).eq('id', offer.id);
+        setOffer({ ...offer, status: 'Offer Accepted' });
+      }
+      await supabase.from('applicants').update({ status: 'Offer Accepted' }).eq('id', applicant.id);
+      setStatus('Offer Accepted');
+      onStatusChange(applicant.id, 'Offer Accepted');
+      toast({ title: 'Offer Accepted', description: `${applicant.fullName} accepted the job offer.` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setAcceptingOffer(false);
+  };
+
+  const handleDeclineOffer = async () => {
+    try {
+      if (offer) {
+        await supabase.from('job_offers').update({ status: 'Offer Declined' }).eq('id', offer.id);
+        setOffer({ ...offer, status: 'Offer Declined' });
+      }
+      await supabase.from('applicants').update({ status: 'Offer Declined' }).eq('id', applicant.id);
+      setStatus('Offer Declined');
+      onStatusChange(applicant.id, 'Offer Declined');
+      toast({ title: 'Offer Declined', description: `${applicant.fullName} declined the job offer.` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleOfferSent = () => {
+    setStatus('Offer Sent');
+    onStatusChange(applicant.id, 'Offer Sent');
+    fetchOffer(applicant.id);
   };
 
   const initials = applicant.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -131,12 +201,7 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
             <div>
               <p className="text-xs text-muted-foreground mb-2">Resume</p>
               {resumeUrl ? (
-                <a
-                  href={resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-primary hover:underline"
-                >
+                <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline">
                   <FileText className="w-4 h-4" />
                   <span>View Resume</span>
                   <Download className="w-3.5 h-3.5" />
@@ -146,6 +211,28 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
                   <FileText className="w-4 h-4" /> {applicant.resumeFile}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Offer Details */}
+          {offer && (
+            <div className="border border-border rounded-xl p-4 space-y-2 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Job Offer</p>
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                  offer.status === 'Offer Sent' ? 'bg-pipeline-offer-sent/15 text-pipeline-offer-sent' :
+                  offer.status === 'Offer Accepted' ? 'bg-pipeline-offer-accepted/15 text-pipeline-offer-accepted' :
+                  'bg-pipeline-offer-declined/15 text-pipeline-offer-declined'
+                }`}>
+                  {offer.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><span className="text-muted-foreground text-xs">Salary:</span> <span className="text-foreground font-medium">{offer.salary_offer}</span></div>
+                <div><span className="text-muted-foreground text-xs">Start:</span> <span className="text-foreground font-medium">{offer.start_date}</span></div>
+                <div><span className="text-muted-foreground text-xs">Contract:</span> <span className="text-foreground font-medium">{offer.contract_type}</span></div>
+                <div><span className="text-muted-foreground text-xs">Sent:</span> <span className="text-foreground font-medium">{offer.offer_date}</span></div>
+              </div>
             </div>
           )}
 
@@ -164,21 +251,31 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
             </Select>
 
             {(status === 'Shortlisted' || status === 'Under Screening') && (
-              <Button
-                onClick={() => setScheduleOpen(true)}
-                variant="outline"
-                className="w-full"
-              >
+              <Button onClick={() => setScheduleOpen(true)} variant="outline" className="w-full">
                 <CalendarCheck className="w-4 h-4 mr-2" /> Schedule Interview
               </Button>
             )}
 
             {status === 'Selected' && (
-              <Button
-                onClick={handleHire}
-                disabled={hiring}
-                className="w-full gradient-success text-primary-foreground"
-              >
+              <Button onClick={() => setOfferOpen(true)} className="w-full bg-pipeline-offer-sent text-primary-foreground hover:bg-pipeline-offer-sent/90">
+                <Send className="w-4 h-4 mr-2" /> Send Job Offer
+              </Button>
+            )}
+
+            {status === 'Offer Sent' && (
+              <div className="flex gap-2">
+                <Button onClick={handleAcceptOffer} disabled={acceptingOffer} className="flex-1 bg-pipeline-offer-accepted text-primary-foreground hover:bg-pipeline-offer-accepted/90">
+                  {acceptingOffer ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ThumbsUp className="w-4 h-4 mr-2" />}
+                  Accept Offer
+                </Button>
+                <Button onClick={handleDeclineOffer} variant="outline" className="flex-1 border-pipeline-offer-declined text-pipeline-offer-declined hover:bg-pipeline-offer-declined/10">
+                  <ThumbsDown className="w-4 h-4 mr-2" /> Decline
+                </Button>
+              </div>
+            )}
+
+            {status === 'Offer Accepted' && (
+              <Button onClick={handleHire} disabled={hiring} className="w-full gradient-success text-primary-foreground">
                 {hiring ? (
                   <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processing...</>
                 ) : (
@@ -195,9 +292,17 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
         applicantName={applicant.fullName}
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
-        onScheduled={() => {
-          handleStatusChange('Interview Scheduled');
-        }}
+        onScheduled={() => handleStatusChange('Interview Scheduled')}
+      />
+
+      <SendOfferDialog
+        applicantId={applicant.id}
+        candidateName={applicant.fullName}
+        position={applicant.positionApplied}
+        department={applicant.department}
+        open={offerOpen}
+        onOpenChange={setOfferOpen}
+        onOfferSent={handleOfferSent}
       />
     </Dialog>
   );
