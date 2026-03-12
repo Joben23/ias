@@ -7,6 +7,8 @@ const stages = [
   { key: 'shortlisted', label: 'Shortlisted', color: 'bg-pipeline-interview' },
   { key: 'interview', label: 'Interview', color: 'bg-pipeline-interview' },
   { key: 'selected', label: 'Selected', color: 'bg-pipeline-selected' },
+  { key: 'offerSent', label: 'Offer Sent', color: 'bg-pipeline-offer-sent' },
+  { key: 'offerAccepted', label: 'Accepted', color: 'bg-pipeline-offer-accepted' },
   { key: 'hired', label: 'Hired', color: 'bg-pipeline-hired' },
 ] as const;
 
@@ -16,10 +18,10 @@ export function HiringPipeline() {
   return (
     <div className="card-elevated p-6">
       <h3 className="text-lg font-display font-semibold text-foreground mb-6">Hiring Pipeline</h3>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-1.5 mb-6">
         {stages.map((stage, i) => {
           const count = pipelineStats[stage.key as keyof typeof pipelineStats];
-          const width = total > 0 ? Math.max((count / total) * 100, 8) : 16;
+          const width = total > 0 ? Math.max((count / total) * 100, 6) : 12;
           return (
             <motion.div
               key={stage.key}
@@ -33,7 +35,7 @@ export function HiringPipeline() {
           );
         })}
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
         {stages.map((stage, i) => {
           const count = pipelineStats[stage.key as keyof typeof pipelineStats];
           return (

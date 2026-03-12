@@ -261,6 +261,62 @@ export type Database = {
           },
         ]
       }
+      job_offers: {
+        Row: {
+          applicant_id: string
+          candidate_name: string
+          contract_type: string
+          created_at: string
+          department: string
+          id: string
+          notes: string | null
+          offer_date: string
+          position: string
+          salary_offer: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          candidate_name: string
+          contract_type?: string
+          created_at?: string
+          department: string
+          id?: string
+          notes?: string | null
+          offer_date?: string
+          position: string
+          salary_offer: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          candidate_name?: string
+          contract_type?: string
+          created_at?: string
+          department?: string
+          id?: string
+          notes?: string | null
+          offer_date?: string
+          position?: string
+          salary_offer?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offers_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_postings: {
         Row: {
           applicant_count: number

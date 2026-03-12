@@ -1,4 +1,4 @@
-export type ApplicantStatus = 'Applied' | 'Under Screening' | 'Shortlisted' | 'Interview Scheduled' | 'Selected' | 'Hired' | 'Rejected';
+export type ApplicantStatus = 'Applied' | 'Under Screening' | 'Shortlisted' | 'Interview Scheduled' | 'Selected' | 'Offer Sent' | 'Offer Accepted' | 'Offer Declined' | 'Hired' | 'Rejected';
 
 export type Department = 'Emergency' | 'Surgery' | 'Pediatrics' | 'Cardiology' | 'Pharmacy' | 'Administration' | 'Security' | 'Maintenance' | 'ICU' | 'Radiology';
 
@@ -439,6 +439,8 @@ export const pipelineStats = {
   shortlisted: applicants.filter(a => a.status === 'Shortlisted').length,
   interview: applicants.filter(a => a.status === 'Interview Scheduled').length,
   selected: applicants.filter(a => a.status === 'Selected').length,
+  offerSent: applicants.filter(a => a.status === 'Offer Sent').length,
+  offerAccepted: applicants.filter(a => a.status === 'Offer Accepted').length,
   hired: applicants.filter(a => a.status === 'Hired').length,
   rejected: applicants.filter(a => a.status === 'Rejected').length,
 };
