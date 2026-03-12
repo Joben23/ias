@@ -68,6 +68,7 @@ function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={item.label}>
                     <NavLink
                       to={item.path}
+                      end={item.path === '/dashboard'}
                       className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                       activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
                     >
