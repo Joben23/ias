@@ -42,7 +42,9 @@ export default function ApplicantsPage() {
           resumeFile: row.resume_file || undefined,
           rating: row.rating ? Number(row.rating) : undefined,
         }));
-        setApplicants(mapped);
+        const dbIds = new Set(mapped.map(a => a.id));
+        const kept = initialApplicants.filter(a => !dbIds.has(a.id));
+        setApplicants([...mapped, ...kept]);
       }
     };
     fetchApplicants();

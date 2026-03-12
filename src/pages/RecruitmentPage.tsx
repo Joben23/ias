@@ -36,7 +36,9 @@ export default function RecruitmentPage() {
           closingDate: row.closing_date || 'TBD',
           status: row.status as JobPosting['status'],
         }));
-        setJobs(mapped);
+        const dbIds = new Set(mapped.map(j => j.id));
+        const kept = initialJobPostings.filter(j => !dbIds.has(j.id));
+        setJobs([...mapped, ...kept]);
       }
     };
     fetchJobs();

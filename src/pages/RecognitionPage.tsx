@@ -35,7 +35,9 @@ export default function RecognitionPage() {
           likes: row.likes,
           comments: row.comments,
         }));
-        setRecognitions(mapped);
+        const dbIds = new Set(mapped.map(r => r.id));
+        const kept = initialRecognitions.filter(r => !dbIds.has(r.id));
+        setRecognitions([...mapped, ...kept]);
       }
     };
     fetchRecognitions();
