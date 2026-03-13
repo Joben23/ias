@@ -3,9 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
-  HeartPulse, Bell, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
+  HeartPulse, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
+import { NotificationBell } from '@/components/hr/NotificationBell';
 import {
   Sidebar,
   SidebarContent,
