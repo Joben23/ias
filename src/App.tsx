@@ -53,6 +53,7 @@ const App = () => (
                         <Route path="/recognition" element={<RecognitionPage />} />
                         <Route path="/interviews" element={<InterviewsPage />} />
                         <Route path="/rankings" element={<CandidateRankingPage />} />
+                        <Route path="/analytics" element={<AnalyticsPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>

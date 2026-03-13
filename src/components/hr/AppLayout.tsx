@@ -51,7 +51,7 @@ function AppSidebar() {
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">MedHire</h1>
+            <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">Human Resources 1</h1>
             <p className="text-[11px] text-sidebar-foreground/50">Hospital HR System</p>
           </div>
         )}

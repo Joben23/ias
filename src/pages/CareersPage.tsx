@@ -54,7 +54,7 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
+      {/* Navigation — no staff login */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/careers" className="flex items-center gap-3">
@@ -62,21 +62,13 @@ export default function CareersPage() {
               <HeartPulse className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-display font-bold text-foreground text-lg">MedHire</span>
+              <span className="font-display font-bold text-foreground text-lg">Human Resources 1</span>
               <span className="text-muted-foreground text-xs block -mt-1">Careers</span>
             </div>
           </Link>
-          <div className="flex items-center gap-4">
-            <a href="#openings" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              Open Positions
-            </a>
-            <Link
-              to="/login"
-              className="text-sm px-4 py-2 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
-            >
-              Staff Login
-            </Link>
-          </div>
+          <a href="#openings" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+            Open Positions
+          </a>
         </div>
       </nav>
 
@@ -98,7 +90,7 @@ export default function CareersPage() {
               <span className="text-primary">Healthcare</span>
             </h1>
             <p className="text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed">
-              Join MedHire Hospital — a leading healthcare institution committed to
+              Join Human Resources 1 Hospital — a leading healthcare institution committed to
               excellence in patient care, innovation, and employee well-being. Discover
               opportunities that make a difference.
             </p>
@@ -145,11 +137,9 @@ export default function CareersPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="font-display text-3xl font-bold text-foreground mb-4">
-                Our Mission
-              </h2>
+              <h2 className="font-display text-3xl font-bold text-foreground mb-4">Our Mission</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                At MedHire Hospital, we are dedicated to delivering compassionate,
+                At Human Resources 1 Hospital, we are dedicated to delivering compassionate,
                 world-class healthcare to our community. Our team of skilled professionals
                 works tirelessly to advance medical science, improve patient outcomes,
                 and create an environment where both patients and staff thrive.
@@ -197,9 +187,7 @@ export default function CareersPage() {
       {/* Why Work With Us */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-12">
-          <h2 className="font-display text-3xl font-bold text-foreground">
-            Why Work With Us
-          </h2>
+          <h2 className="font-display text-3xl font-bold text-foreground">Why Work With Us</h2>
           <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
             We invest in our people because great healthcare starts with a great team.
           </p>
@@ -217,12 +205,8 @@ export default function CareersPage() {
               <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                 <benefit.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="font-display font-semibold text-foreground mb-2">
-                {benefit.title}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {benefit.description}
-              </p>
+              <h3 className="font-display font-semibold text-foreground mb-2">{benefit.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{benefit.description}</p>
             </motion.div>
           ))}
         </div>
@@ -232,9 +216,7 @@ export default function CareersPage() {
       <section id="openings" className="bg-card border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl font-bold text-foreground">
-              Open Positions
-            </h2>
+            <h2 className="font-display text-3xl font-bold text-foreground">Open Positions</h2>
             <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
               Explore our current openings and find where you belong.
             </p>
@@ -322,7 +304,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer with subtle Staff Access */}
       <footer className="border-t border-border bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -330,11 +312,15 @@ export default function CareersPage() {
               <div className="gradient-primary p-2 rounded-xl">
                 <HeartPulse className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-foreground">MedHire Hospital</span>
+              <span className="font-display font-bold text-foreground">Human Resources 1 Hospital</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} MedHire Hospital. All rights reserved.
-            </p>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>© {new Date().getFullYear()} Human Resources 1 Hospital. All rights reserved.</span>
+              <span className="text-border">|</span>
+              <Link to="/login" className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                Staff Access
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
