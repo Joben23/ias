@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
-  HeartPulse, Bell, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy,
+  HeartPulse, Bell, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import {
@@ -31,6 +31,7 @@ const navItems = [
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
   { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
   { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
+  { path: '/dashboard/analytics', label: 'Analytics', icon: PieChart },
 ];
 
 const externalLinks = [
@@ -50,7 +51,7 @@ function AppSidebar() {
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">MedHire</h1>
+            <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">Human Resources 1</h1>
             <p className="text-[11px] text-sidebar-foreground/50">Hospital HR System</p>
           </div>
         )}

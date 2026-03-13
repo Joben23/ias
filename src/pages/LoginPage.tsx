@@ -42,7 +42,7 @@ export default function LoginPage() {
           <div className="gradient-primary w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <HeartPulse className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Welcome to MedHire</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground">Welcome to Human Resources 1</h1>
           <p className="text-muted-foreground text-sm mt-1">Admin Portal — Authorized Access Only</p>
         </div>
 

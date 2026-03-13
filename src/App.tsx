@@ -15,6 +15,7 @@ import PerformancePage from "./pages/PerformancePage";
 import RecognitionPage from "./pages/RecognitionPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import CandidateRankingPage from "./pages/CandidateRankingPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 import LoginPage from "./pages/LoginPage";
 import CareersPage from "./pages/CareersPage";
 import JobApplicationPage from "./pages/JobApplicationPage";
@@ -52,6 +53,7 @@ const App = () => (
                         <Route path="/recognition" element={<RecognitionPage />} />
                         <Route path="/interviews" element={<InterviewsPage />} />
                         <Route path="/rankings" element={<CandidateRankingPage />} />
+                        <Route path="/analytics" element={<AnalyticsPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>
