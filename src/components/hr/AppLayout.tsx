@@ -163,10 +163,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
                 <Search className="w-4 h-4 text-muted-foreground" />
               </button>
-              <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors relative">
-                <Bell className="w-4 h-4 text-muted-foreground" />
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
-              </button>
+              <NotificationBell />
               <ProfileDropdown />
             </div>
           </header>
