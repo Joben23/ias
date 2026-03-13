@@ -31,6 +31,7 @@ const navItems = [
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
   { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
   { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
+  { path: '/dashboard/analytics', label: 'Analytics', icon: PieChart },
 ];
 
 const externalLinks = [
