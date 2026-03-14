@@ -68,9 +68,18 @@ export default function CareersPage() {
               <span className="text-muted-foreground text-xs block -mt-1">Careers</span>
             </div>
           </Link>
-          <a href="#openings" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-            Open Positions
-          </a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            <a href="#openings" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+              Open Positions
+            </a>
+          </div>
         </div>
       </nav>
 
