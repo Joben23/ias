@@ -39,6 +39,7 @@ const stats = [
 export default function CareersPage() {
   const [jobs, setJobs] = useState<PublicJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const fetchJobs = async () => {
