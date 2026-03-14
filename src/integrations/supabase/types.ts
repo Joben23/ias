@@ -91,6 +91,7 @@ export type Database = {
           employee_id: string
           full_name: string
           id: string
+          onboarding_status: string
           phone: string | null
           position: string
           start_date: string | null
@@ -105,6 +106,7 @@ export type Database = {
           employee_id: string
           full_name: string
           id?: string
+          onboarding_status?: string
           phone?: string | null
           position: string
           start_date?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           employee_id?: string
           full_name?: string
           id?: string
+          onboarding_status?: string
           phone?: string | null
           position?: string
           start_date?: string | null
@@ -396,6 +399,133 @@ export type Database = {
             columns: ["related_applicant_id"]
             isOneToOne: false
             referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_documents: {
+        Row: {
+          document_name: string
+          document_type: string
+          employee_id: string
+          file_path: string
+          id: string
+          task_id: string | null
+          uploaded_at: string
+        }
+        Insert: {
+          document_name: string
+          document_type: string
+          employee_id: string
+          file_path: string
+          id?: string
+          task_id?: string | null
+          uploaded_at?: string
+        }
+        Update: {
+          document_name?: string
+          document_type?: string
+          employee_id?: string
+          file_path?: string
+          id?: string
+          task_id?: string | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_documents_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          status: string
+          task_category: string
+          task_name: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          status?: string
+          task_category?: string
+          task_name: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          status?: string
+          task_category?: string
+          task_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_tasks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orientations: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          location: string
+          notes: string | null
+          orientation_date: string
+          orientation_time: string
+          status: string
+          trainer_name: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          location?: string
+          notes?: string | null
+          orientation_date: string
+          orientation_time: string
+          status?: string
+          trainer_name: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          location?: string
+          notes?: string | null
+          orientation_date?: string
+          orientation_time?: string
+          status?: string
+          trainer_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orientations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
