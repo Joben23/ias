@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import {
   HeartPulse, Briefcase, MapPin, Clock, Users, ChevronRight,
-  Shield, TrendingUp, Heart, Award, Building2, GraduationCap,
+  Shield, TrendingUp, Heart, Award, Building2, GraduationCap, Moon, Sun,
 } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface PublicJob {
   id: string;
