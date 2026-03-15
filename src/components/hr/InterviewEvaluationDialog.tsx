@@ -67,6 +67,9 @@ export function InterviewEvaluationDialog({ interviewId, applicantId, applicantN
       // Mark interview as completed
       await supabase.from('interviews').update({ status: 'Completed' }).eq('id', interviewId);
 
+      // Auto-update applicant status to reflect interview completion
+      await supabase.from('applicants').update({ status: 'Interview Completed' }).eq('id', applicantId);
+
       toast({ title: 'Evaluation Submitted', description: `Evaluation for ${applicantName} saved.` });
       onSubmitted();
       onOpenChange(false);

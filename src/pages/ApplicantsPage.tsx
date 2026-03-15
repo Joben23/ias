@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { Search, Plus, Users, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Offer Sent', 'Offer Accepted', 'Offer Declined', 'Hired', 'Rejected'];
+const statusFilters: ApplicantStatus[] = ['Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Interview Completed', 'Selected', 'Offer Sent', 'Offer Accepted', 'Offer Declined', 'Hired', 'Rejected'];
 const positionFilters: Position[] = ['Doctor', 'Nurse', 'Medical Technologist', 'Pharmacist', 'Administrative Staff', 'Security Personnel', 'Maintenance Staff'];
 
 export default function ApplicantsPage() {
