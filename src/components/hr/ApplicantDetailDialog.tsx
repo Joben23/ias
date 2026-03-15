@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
 import { SendOfferDialog } from '@/components/hr/SendOfferDialog';
+import { RecruitmentTimeline } from '@/components/hr/RecruitmentTimeline';
 
 const statuses: ApplicantStatus[] = [
   'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Interview Completed', 'Selected',
