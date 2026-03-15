@@ -1,0 +1,308 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { motion } from 'framer-motion';
+import {
+  HeartPulse, Briefcase, MapPin, Clock, ChevronRight,
+  Shield, TrendingUp, Heart, Award, Building2, GraduationCap, Moon, Sun,
+} from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
+
+interface PublicJob {
+  id: string;
+  title: string;
+  department: string;
+  position: string;
+  employment_type: string;
+  description: string;
+  requirements: string[] | null;
+  location: string | null;
+  closing_date: string | null;
+}
+
+const benefits = [
+  { icon: TrendingUp, title: 'Career Growth', description: 'Clear advancement pathways with mentorship and continuous learning programs.' },
+  { icon: Heart, title: 'Health & Wellness', description: 'Comprehensive medical, dental, and vision coverage for you and your family.' },
+  { icon: Shield, title: 'Job Security', description: 'Stable employment in the ever-growing healthcare industry.' },
+  { icon: Award, title: 'Recognition', description: 'Employee appreciation programs and performance-based incentives.' },
+  { icon: GraduationCap, title: 'Training & Development', description: 'Funded certifications, conferences, and professional development.' },
+  { icon: Building2, title: 'Modern Facilities', description: 'State-of-the-art hospital equipped with the latest medical technology.' },
+];
+
+const stats = [
+  { value: '500+', label: 'Healthcare Professionals' },
+  { value: '50+', label: 'Departments' },
+  { value: '15+', label: 'Years of Service' },
+  { value: '98%', label: 'Employee Satisfaction' },
+];
+
+export default function LandingPage() {
+  const [previewJobs, setPreviewJobs] = useState<PublicJob[]>([]);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const { count } = await supabase
+        .from('job_postings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'Open');
+      setTotalJobs(count || 0);
+
+      const { data } = await supabase
+        .from('job_postings')
+        .select('id, title, department, position, employment_type, description, requirements, location, closing_date')
+        .eq('status', 'Open')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (data) setPreviewJobs(data as PublicJob[]);
+      setLoading(false);
+    };
+    fetchJobs();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="gradient-primary p-2 rounded-xl">
+              <HeartPulse className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <span className="font-display font-bold text-foreground text-lg">Human Resources 1</span>
+              <span className="text-muted-foreground text-xs block -mt-1">Hospital</span>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            <Link to="/careers" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
+              View All Jobs
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-primary bg-primary/10 px-4 py-1.5 rounded-full mb-6">
+              <HeartPulse className="w-4 h-4" /> We're Hiring
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+              Build Your Career in{' '}
+              <span className="text-primary">Healthcare</span>
+            </h1>
+            <p className="text-lg text-muted-foreground mt-6 max-w-2xl leading-relaxed">
+              Join Human Resources 1 Hospital — a leading healthcare institution committed to
+              excellence in patient care, innovation, and employee well-being. Discover
+              opportunities that make a difference.
+            </p>
+            <div className="flex flex-wrap gap-4 mt-8">
+              <Link
+                to="/careers"
+                className="gradient-primary text-primary-foreground px-6 py-3 rounded-xl font-medium text-sm flex items-center gap-2 hover:opacity-90 transition-opacity"
+              >
+                View Open Positions
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="#about"
+                className="bg-muted text-foreground px-6 py-3 rounded-xl font-medium text-sm hover:bg-muted/80 transition-colors"
+              >
+                Learn More
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-16"
+          >
+            {stats.map((stat, i) => (
+              <div key={i} className="card-elevated p-5 text-center">
+                <p className="font-display text-2xl sm:text-3xl font-bold text-primary">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* About / Mission */}
+      <section id="about" className="bg-card border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+              <h2 className="font-display text-3xl font-bold text-foreground mb-4">Our Mission</h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                At Human Resources 1 Hospital, we are dedicated to delivering compassionate,
+                world-class healthcare to our community. Our team of skilled professionals
+                works tirelessly to advance medical science, improve patient outcomes,
+                and create an environment where both patients and staff thrive.
+              </p>
+              <div className="space-y-4">
+                {['Patient-centered care excellence', 'Innovation in medical technology', 'Inclusive and supportive work culture', 'Community health & wellness programs'].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                    <span className="text-sm text-foreground">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="grid grid-cols-2 gap-4">
+              <div className="gradient-primary rounded-2xl p-6 text-primary-foreground">
+                <h3 className="font-display font-bold text-lg">Vision</h3>
+                <p className="text-sm opacity-90 mt-2">To be the leading healthcare employer known for nurturing talent and transforming patient care.</p>
+              </div>
+              <div className="gradient-cool rounded-2xl p-6 text-primary-foreground">
+                <h3 className="font-display font-bold text-lg">Values</h3>
+                <p className="text-sm opacity-90 mt-2">Integrity, compassion, innovation, teamwork, and continuous improvement.</p>
+              </div>
+              <div className="gradient-warm rounded-2xl p-6 text-primary-foreground col-span-2">
+                <h3 className="font-display font-bold text-lg">Culture</h3>
+                <p className="text-sm opacity-90 mt-2">A collaborative workplace that celebrates diversity, encourages growth, and ensures every team member feels valued and empowered.</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Work With Us */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-12">
+          <h2 className="font-display text-3xl font-bold text-foreground">Why Work With Us</h2>
+          <p className="text-muted-foreground mt-3 max-w-lg mx-auto">We invest in our people because great healthcare starts with a great team.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {benefits.map((benefit, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="card-elevated p-6 hover:border-primary/30 transition-all group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <benefit.icon className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-display font-semibold text-foreground mb-2">{benefit.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{benefit.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Preview of Open Positions — top 3 */}
+      <section className="bg-card border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-bold text-foreground">Open Positions</h2>
+            <p className="text-muted-foreground mt-3 max-w-lg mx-auto">View some of our available opportunities.</p>
+          </div>
+
+          {loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="card-elevated p-6 animate-pulse">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-3" />
+                  <div className="h-3 bg-muted rounded w-1/2 mb-6" />
+                  <div className="h-3 bg-muted rounded w-full mb-2" />
+                  <div className="h-3 bg-muted rounded w-5/6" />
+                </div>
+              ))}
+            </div>
+          ) : previewJobs.length === 0 ? (
+            <div className="text-center py-16">
+              <Briefcase className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+              <p className="text-muted-foreground">No open positions at the moment. Check back soon!</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {previewJobs.map((job, i) => (
+                  <motion.div
+                    key={job.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className="card-elevated p-6 hover:border-primary/30 transition-all group flex flex-col"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="bg-primary/10 p-2 rounded-lg">
+                        <Briefcase className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-pipeline-hired/10 text-pipeline-hired">Open</span>
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{job.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">{job.description}</p>
+                    <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                      <div className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {job.department}</div>
+                      <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.location || 'On-site'}</div>
+                      <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {job.employment_type}</div>
+                    </div>
+                    <Link
+                      to={`/careers/apply/${job.id}`}
+                      className="gradient-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium text-sm text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    >
+                      Apply Now <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+              {totalJobs > 3 && (
+                <div className="text-center mt-10">
+                  <Link
+                    to="/careers"
+                    className="inline-flex items-center gap-2 gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+                  >
+                    View All {totalJobs} Jobs <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="gradient-primary p-2 rounded-xl">
+                <HeartPulse className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="font-display font-bold text-foreground">Human Resources 1 Hospital</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>© {new Date().getFullYear()} Human Resources 1 Hospital. All rights reserved.</span>
+              <span className="text-border">|</span>
+              <Link to="/login" className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">Staff Access</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
