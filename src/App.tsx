@@ -34,7 +34,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<CareersPage />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
               <Route path="/login" element={<LoginPage />} />
