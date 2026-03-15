@@ -250,13 +250,13 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
               </SelectContent>
             </Select>
 
-            {(status === 'Shortlisted' || status === 'Under Screening') && (
+            {(status === 'Shortlisted' || status === 'Under Screening' || status === 'Interview Scheduled') && (
               <Button onClick={() => setScheduleOpen(true)} variant="outline" className="w-full">
                 <CalendarCheck className="w-4 h-4 mr-2" /> Schedule Interview
               </Button>
             )}
 
-            {status === 'Selected' && (
+            {(status === 'Interview Completed' || status === 'Selected') && (
               <Button onClick={() => setOfferOpen(true)} className="w-full bg-pipeline-offer-sent text-primary-foreground hover:bg-pipeline-offer-sent/90">
                 <Send className="w-4 h-4 mr-2" /> Send Job Offer
               </Button>

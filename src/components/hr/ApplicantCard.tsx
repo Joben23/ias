@@ -8,6 +8,7 @@ const statusColors: Record<string, string> = {
   'Under Screening': 'bg-pipeline-screening/15 text-pipeline-screening border-pipeline-screening/30',
   'Shortlisted': 'bg-pipeline-interview/15 text-pipeline-interview border-pipeline-interview/30',
   'Interview Scheduled': 'bg-pipeline-interview/15 text-pipeline-interview border-pipeline-interview/30',
+  'Interview Completed': 'bg-pipeline-selected/15 text-pipeline-selected border-pipeline-selected/30',
   'Selected': 'bg-pipeline-selected/15 text-pipeline-selected border-pipeline-selected/30',
   'Offer Sent': 'bg-pipeline-offer-sent/15 text-pipeline-offer-sent border-pipeline-offer-sent/30',
   'Offer Accepted': 'bg-pipeline-offer-accepted/15 text-pipeline-offer-accepted border-pipeline-offer-accepted/30',
