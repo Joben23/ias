@@ -13,7 +13,7 @@ import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog
 import { SendOfferDialog } from '@/components/hr/SendOfferDialog';
 
 const statuses: ApplicantStatus[] = [
-  'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Selected',
+  'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Interview Completed', 'Selected',
   'Offer Sent', 'Offer Accepted', 'Offer Declined', 'Hired', 'Rejected',
 ];
 
