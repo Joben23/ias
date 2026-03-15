@@ -42,8 +42,22 @@ export default function CandidateRankingPage() {
     const fetchRankings = async () => {
       setLoading(true);
 
-      // Fetch applicants
-      let query = supabase.from('applicants').select('*');
+      // Fetch all evaluations first - only candidates with evaluations appear in rankings
+      const { data: evals } = await supabase
+        .from('interview_evaluations')
+        .select('*');
+
+      if (!evals || evals.length === 0) {
+        setCandidates([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get unique applicant IDs that have evaluations
+      const evaluatedIds = [...new Set(evals.map(e => e.applicant_id))];
+
+      // Fetch only evaluated applicants
+      let query = supabase.from('applicants').select('*').in('id', evaluatedIds);
       if (selectedJob !== 'all') {
         query = query.eq('job_posting_id', selectedJob);
       }
@@ -54,13 +68,6 @@ export default function CandidateRankingPage() {
         setLoading(false);
         return;
       }
-
-      // Fetch evaluations for these applicants
-      const ids = applicants.map(a => a.id);
-      const { data: evals } = await supabase
-        .from('interview_evaluations')
-        .select('*')
-        .in('applicant_id', ids);
 
       // Build scored candidates
       const ranked: RankedCandidate[] = applicants.map(a => {
