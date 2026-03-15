@@ -237,6 +237,9 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
             </div>
           )}
 
+          {/* Recruitment Timeline */}
+          <RecruitmentTimeline currentStatus={status} />
+
           {/* Status Management */}
           <div className="border-t border-border pt-4 space-y-3">
             <p className="text-xs text-muted-foreground">Change Status</p>
