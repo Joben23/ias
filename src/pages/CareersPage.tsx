@@ -9,6 +9,7 @@ import {
 import { useTheme } from '@/components/ThemeProvider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StaffLoginModal } from '@/components/StaffLoginModal';
 
 interface PublicJob {
   id: string;
@@ -28,6 +29,7 @@ export default function CareersPage() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -226,11 +228,18 @@ export default function CareersPage() {
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span>© {new Date().getFullYear()} Human Resources 1 Hospital. All rights reserved.</span>
               <span className="text-border">|</span>
-              <Link to="/login" className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">Staff Access</Link>
+              <button
+                onClick={() => setLoginModalOpen(true)}
+                className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              >
+                Staff Access
+              </button>
             </div>
           </div>
         </div>
       </footer>
+
+      <StaffLoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ export interface OnboardingEmployee {
   department: string;
   employee_id: string;
   start_date: string | null;
+  employment_type: string;
   onboarding_status: string;
   email: string;
 }
@@ -49,7 +50,7 @@ export function useOnboardingEmployees() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
-        .select('*')
+        .select('id, full_name, position, department, employee_id, start_date, employment_type, onboarding_status, email')
         .neq('onboarding_status', 'Employee Activated')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -122,6 +123,29 @@ export function useToggleTask() {
         })
         .eq('id', taskId);
       if (error) throw error;
+
+      // Check if all tasks are completed
+      const { data: employeeId } = await supabase
+        .from('onboarding_tasks')
+        .select('employee_id')
+        .eq('id', taskId)
+        .single();
+
+      if (employeeId) {
+        const { data: allTasks } = await supabase
+          .from('onboarding_tasks')
+          .select('status')
+          .eq('employee_id', employeeId.employee_id);
+
+        const allCompleted = allTasks?.every(task => task.status === 'completed');
+
+        if (allCompleted) {
+          await supabase
+            .from('employees')
+            .update({ onboarding_status: 'Employee Activated' })
+            .eq('id', employeeId.employee_id);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding-tasks'] });

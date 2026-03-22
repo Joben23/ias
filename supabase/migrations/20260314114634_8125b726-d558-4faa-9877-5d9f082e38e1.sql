@@ -12,8 +12,13 @@ CREATE TABLE public.onboarding_tasks (
 
 ALTER TABLE public.onboarding_tasks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated can view onboarding tasks" ON public.onboarding_tasks
-  FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Users can view own onboarding tasks" ON public.onboarding_tasks
+  FOR SELECT TO authenticated
+  USING (
+    employee_id IN (
+      SELECT id FROM public.employees WHERE user_id = auth.uid()
+    )
+  );
 
 CREATE POLICY "HR and Admin can manage onboarding tasks" ON public.onboarding_tasks
   FOR ALL TO authenticated

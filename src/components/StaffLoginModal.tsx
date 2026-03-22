@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,21 +15,22 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 
-export default function LoginPage() {
+interface StaffLoginModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function StaffLoginModal({ open, onOpenChange }: StaffLoginModalProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [showReset, setShowReset] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
-
-  const from = location.state?.from || '/dashboard';
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -47,9 +48,11 @@ export default function LoginPage() {
       ]);
 
       if (isAdmin || isHR) {
-        navigate(from === '/employee-portal' ? '/dashboard' : from, { replace: true });
+        navigate('/dashboard', { replace: true });
+        onOpenChange(false);
       } else if (isEmployee) {
         navigate('/employee-portal', { replace: true });
+        onOpenChange(false);
       } else {
         // No valid role, sign out
         await supabase.auth.signOut();
@@ -123,7 +126,7 @@ export default function LoginPage() {
     setResetLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/`,
     });
 
     setResetLoading(false);
@@ -139,80 +142,105 @@ export default function LoginPage() {
         title: 'Password reset sent',
         description: 'Check your email for password reset instructions.',
       });
-      setResetDialogOpen(false);
+      setShowReset(false);
       setResetEmail('');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <div className="gradient-primary w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <HeartPulse className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Welcome to MedHire</h1>
-          <p className="text-muted-foreground text-sm mt-1">Hospital HR Management System</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="card-elevated p-6 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="username" type="text" placeholder="Enter your email or username" value={username} onChange={e => setUsername(e.target.value)} className="pl-10" required />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="text-center">
+            <div className="gradient-primary w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <HeartPulse className="w-7 h-7 text-primary-foreground" />
             </div>
+            <DialogTitle className="text-xl">Staff Access</DialogTitle>
+            <DialogDescription>
+              Login to access your employee portal
+            </DialogDescription>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="pl-10" required />
-            </div>
-          </div>
-          <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
+        </DialogHeader>
 
-        <div className="text-center">
-          <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="link" className="text-sm text-muted-foreground hover:text-foreground">
+        {!showReset ? (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Email or Username</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Enter your email or username"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
+              {loading ? 'Signing in…' : 'Sign In'}
+            </Button>
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                className="text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => setShowReset(true)}
+              >
                 Forgot your password?
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Reset Password</DialogTitle>
-                <DialogDescription>
-                  Enter your email address and we'll send you a link to reset your password.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="reset-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={resetEmail}
-                      onChange={e => setResetEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" disabled={resetLoading}>
-                  {resetLoading ? 'Sending…' : 'Send Reset Link'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-    </div>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowReset(false)}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button type="submit" className="flex-1" disabled={resetLoading}>
+                {resetLoading ? 'Sending…' : 'Send Reset Link'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

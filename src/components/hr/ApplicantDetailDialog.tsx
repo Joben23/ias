@@ -91,21 +91,60 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
       const { data, error } = await supabase.functions.invoke('hire-applicant', {
         body: { applicant_id: applicant.id },
       });
-      if (error) throw error;
+      
+      if (error) {
+        throw new Error(error.message || 'Edge Function failed');
+      }
+
+      if (!data) {
+        throw new Error('No response from server');
+      }
+
       setStatus('Hired');
       onStatusChange(applicant.id, 'Hired');
       onHire(applicant);
+      
       if (offer) {
         await supabase.from('job_offers').update({ status: 'Offer Accepted' }).eq('id', offer.id);
       }
+      
       toast({
-        title: 'Applicant Hired!',
-        description: `Employee account created. Username: ${data.username}, Password: ${data.password}`,
+        title: '✅ Applicant Hired Successfully!',
+        description: `
+Employee Account Created
+ID: ${data.employee_id}
+Username: ${data.username}
+Password: ${data.password}
+Start Date: ${data.start_date}
+        `,
       });
     } catch (err: any) {
-      toast({ title: 'Hire failed', description: err.message || 'Something went wrong', variant: 'destructive' });
+      console.error('Hire error:', err);
+      
+      let errorMessage = 'Failed to create employee account. Please try again.';
+      
+      if (err.message?.includes('Job offer not found')) {
+        errorMessage = 'Job offer not found. Please ensure offer is created and accepted before hiring.';
+      } else if (err.message?.includes('Applicant not found')) {
+        errorMessage = 'Applicant not found in system.';
+      } else if (err.message?.includes('User already exists')) {
+        errorMessage = 'An employee account already exists for this applicant.';
+      } else if (err.message?.includes('already hired')) {
+        errorMessage = 'This applicant has already been hired.';
+      } else if (err.message?.includes('Unauthorized')) {
+        errorMessage = 'You do not have permission to hire applicants.';
+      } else if (err.message) {
+        errorMessage = `Error: ${err.message}`;
+      }
+      
+      toast({ 
+        title: '❌ Hiring Failed', 
+        description: errorMessage,
+        variant: 'destructive' 
+      });
+    } finally {
+      setHiring(false);
     }
-    setHiring(false);
   };
 
   const handleAcceptOffer = async () => {
@@ -239,6 +278,25 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
 
           {/* Recruitment Timeline */}
           <RecruitmentTimeline currentStatus={status} />
+
+          {/* Onboarding Info - shown after hiring */}
+          {status === 'Hired' && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border border-green-200 dark:border-green-800 rounded-xl p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-green-900 dark:text-green-100">✅ Employee Account Created</p>
+                  <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                    The employee has been successfully registered and will now begin the onboarding process.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-3 space-y-1 text-sm">
+                <p className="text-muted-foreground"><span className="font-medium text-foreground">Next Step:</span> Complete onboarding checklist</p>
+                <p className="text-muted-foreground"><span className="font-medium text-foreground">Location:</span> Onboarding {'>'} New Hire Onboarding page</p>
+              </div>
+            </div>
+          )}
 
           {/* Status Management */}
           <div className="border-t border-border pt-4 space-y-3">

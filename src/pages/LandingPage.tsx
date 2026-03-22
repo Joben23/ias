@@ -7,6 +7,7 @@ import {
   Shield, TrendingUp, Heart, Award, Building2, GraduationCap, Moon, Sun,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { StaffLoginModal } from '@/components/StaffLoginModal';
 
 interface PublicJob {
   id: string;
@@ -40,6 +41,7 @@ export default function LandingPage() {
   const [previewJobs, setPreviewJobs] = useState<PublicJob[]>([]);
   const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -87,6 +89,12 @@ export default function LandingPage() {
             <Link to="/careers" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
               View All Jobs
             </Link>
+            <button
+              onClick={() => setLoginModalOpen(true)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+            >
+              Employee Login
+            </button>
           </div>
         </div>
       </nav>
@@ -298,11 +306,18 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span>© {new Date().getFullYear()} Human Resources 1 Hospital. All rights reserved.</span>
               <span className="text-border">|</span>
-              <Link to="/login" className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">Staff Access</Link>
+              <button
+                onClick={() => setLoginModalOpen(true)}
+                className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              >
+                Staff Access
+              </button>
             </div>
           </div>
         </div>
       </footer>
+
+      <StaffLoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </div>
   );
 }

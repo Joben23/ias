@@ -68,9 +68,9 @@ CREATE TABLE public.employees (
 
 ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated can view employees" ON public.employees
+CREATE POLICY "Users can view own employee record" ON public.employees
 FOR SELECT TO authenticated
-USING (true);
+USING (auth.uid() = user_id);
 
 CREATE POLICY "Admin and HR can manage employees" ON public.employees
 FOR ALL TO authenticated

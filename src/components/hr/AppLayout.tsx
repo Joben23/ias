@@ -28,6 +28,7 @@ const navItems = [
   { path: '/dashboard/applicants', label: 'Applicants', icon: Users },
   { path: '/dashboard/recruitment', label: 'Recruitment', icon: Briefcase },
   { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
+  { path: '/dashboard/employees', label: 'Employee Directory', icon: Users },
   { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
   { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },

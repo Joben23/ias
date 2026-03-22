@@ -12,7 +12,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace state={{ from: '/dashboard' }} />;
+  if (!user) return <Navigate to="/" replace state={{ from: '/dashboard' }} />;
 
   return <>{children}</>;
 }

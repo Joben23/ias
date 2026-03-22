@@ -6,17 +6,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/hr/ProtectedRoute";
+import { EmployeeProtectedRoute } from "@/components/hr/EmployeeProtectedRoute";
 import { AppLayout } from "@/components/hr/AppLayout";
+import EmployeePortalPage from "./pages/EmployeePortalPage";
 import Index from "./pages/Index";
 import ApplicantsPage from "./pages/ApplicantsPage";
 import RecruitmentPage from "./pages/RecruitmentPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import EmployeeDirectoryPage from "./pages/EmployeeDirectoryPage";
 import PerformancePage from "./pages/PerformancePage";
 import RecognitionPage from "./pages/RecognitionPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import CandidateRankingPage from "./pages/CandidateRankingPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
-import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 import CareersPage from "./pages/CareersPage";
 import JobApplicationPage from "./pages/JobApplicationPage";
@@ -37,7 +39,16 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
-              <Route path="/login" element={<LoginPage />} />
+              
+              {/* Employee Portal */}
+              <Route
+                path="/employee-portal"
+                element={
+                  <EmployeeProtectedRoute>
+                    <EmployeePortalPage />
+                  </EmployeeProtectedRoute>
+                }
+              />
               
               {/* Protected admin/HR routes */}
               <Route
@@ -50,6 +61,7 @@ const App = () => (
                         <Route path="/applicants" element={<ApplicantsPage />} />
                         <Route path="/recruitment" element={<RecruitmentPage />} />
                         <Route path="/onboarding" element={<OnboardingPage />} />
+                        <Route path="/employees" element={<EmployeeDirectoryPage />} />
                         <Route path="/performance" element={<PerformancePage />} />
                         <Route path="/recognition" element={<RecognitionPage />} />
                         <Route path="/interviews" element={<InterviewsPage />} />

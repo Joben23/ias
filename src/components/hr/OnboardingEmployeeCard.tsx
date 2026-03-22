@@ -2,11 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Briefcase, Building2, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react';
 import { OnboardingEmployee, useOnboardingTasks } from '@/hooks/useOnboarding';
-import { OnboardingChecklist } from './OnboardingChecklist';
-import { OnboardingDocumentUpload } from './OnboardingDocumentUpload';
-import { OrientationSection } from './OrientationSection';
-import { Button } from '@/components/ui/button';
-import { useUpdateOnboardingStatus } from '@/hooks/useOnboarding';
 
 const statusSteps = ['Offer Accepted', 'Documents Submitted', 'Orientation Completed', 'Employee Activated'] as const;
 
@@ -18,7 +13,6 @@ interface Props {
 export function OnboardingEmployeeCard({ employee, index }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { data: tasks = [] } = useOnboardingTasks(employee.id);
-  const updateStatus = useUpdateOnboardingStatus();
 
   const completedCount = tasks.filter(t => t.status === 'completed').length;
   const totalCount = tasks.length || 1;
@@ -26,10 +20,6 @@ export function OnboardingEmployeeCard({ employee, index }: Props) {
   const initials = employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   const currentStepIdx = statusSteps.indexOf(employee.onboarding_status as any);
-
-  const handleActivate = () => {
-    updateStatus.mutate({ employeeId: employee.id, status: 'Employee Activated' });
-  };
 
   return (
     <motion.div
@@ -50,6 +40,11 @@ export function OnboardingEmployeeCard({ employee, index }: Props) {
               <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" />{employee.position}</span>
               <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{employee.department}</span>
             </div>
+            {employee.start_date && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Start Date: {new Date(employee.start_date).toLocaleDateString()}
+              </p>
+            )}
           </div>
           <div className="text-right shrink-0">
             <p className="text-lg font-display font-bold text-primary">{progress}%</p>
@@ -112,12 +107,6 @@ export function OnboardingEmployeeCard({ employee, index }: Props) {
             <OnboardingChecklist employeeId={employee.id} />
             <OnboardingDocumentUpload employeeId={employee.id} />
             <OrientationSection employeeId={employee.id} />
-
-            {progress === 100 && employee.onboarding_status !== 'Employee Activated' && (
-              <Button onClick={handleActivate} className="w-full gradient-primary text-primary-foreground">
-                Activate Employee
-              </Button>
-            )}
           </div>
         </motion.div>
       )}
