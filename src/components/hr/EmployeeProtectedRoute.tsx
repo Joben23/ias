@@ -8,7 +8,7 @@ interface EmployeeProtectedRouteProps {
 }
 
 export function EmployeeProtectedRoute({ children }: EmployeeProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const [isEmployee, setIsEmployee] = useState<boolean | null>(null);
   const [checkingRole, setCheckingRole] = useState(false);
 
@@ -46,6 +46,11 @@ export function EmployeeProtectedRoute({ children }: EmployeeProtectedRouteProps
 
   if (!user) {
     return <Navigate to="/" replace state={{ from: '/employee-portal' }} />;
+  }
+
+  // Check if user must change password
+  if (profile?.must_change_password) {
+    return <Navigate to="/auth/change-password" replace />;
   }
 
   if (isEmployee === false) {

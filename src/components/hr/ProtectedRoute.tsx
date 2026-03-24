@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
 
   if (loading) {
     return (
@@ -13,6 +13,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/" replace state={{ from: '/dashboard' }} />;
+
+  // Check if user must change password
+  if (profile?.must_change_password) {
+    return <Navigate to="/auth/change-password" replace />;
+  }
 
   return <>{children}</>;
 }

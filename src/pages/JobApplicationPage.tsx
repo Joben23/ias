@@ -106,7 +106,7 @@ export default function JobApplicationPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">Job posting not found.</p>
-        <Link to="/careers" className="text-primary text-sm hover:underline">← Back to Careers</Link>
+        <Link to="/" className="text-primary text-sm hover:underline">← Back to Home</Link>
       </div>
     );
   }
@@ -119,21 +119,34 @@ export default function JobApplicationPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="card-elevated p-8 max-w-md w-full text-center"
         >
-          <div className="w-16 h-16 rounded-full bg-pipeline-hired/10 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-pipeline-hired" />
+          <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">Application Submitted!</h2>
+          <h2 className="font-display text-2xl font-bold text-foreground mb-2">Application Submitted Successfully!</h2>
           <p className="text-muted-foreground text-sm mb-6">
-            Thank you for applying for <span className="font-medium text-foreground">{job.title}</span>.
-            Our HR team will review your application and get back to you.
+            Thank you for applying. Our HR team will review your application and contact you soon.
           </p>
-          <Link
-            to="/careers"
-            className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-medium text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Careers
-          </Link>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/"
+              className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-xl font-medium text-sm inline-flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Link>
+            <button
+              onClick={() => {
+                // Scroll to jobs section on landing page
+                navigate('/');
+                setTimeout(() => {
+                  document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="bg-muted text-foreground px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-muted/80 transition-colors"
+            >
+              View Other Open Positions
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -144,9 +157,9 @@ export default function JobApplicationPage() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
-          <Link to="/careers" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Back to Careers
+            Back to Home
           </Link>
         </div>
       </nav>

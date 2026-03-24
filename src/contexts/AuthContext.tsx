@@ -10,6 +10,7 @@ interface Profile {
   department: string | null;
   role: string | null;
   avatar_url: string | null;
+  must_change_password?: boolean;
 }
 
 interface AuthContextType {

@@ -1,13 +1,16 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Building2, Briefcase, Search, Filter, CheckCircle2, Clock } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminResetPasswordDialog } from '@/components/AdminResetPasswordDialog';
+import { AdminAccountStatusDialog, AccountStatus } from '@/components/AdminAccountStatusDialog';
 
 interface Employee {
   id: string;
+  user_id: string;
   full_name: string;
   position: string;
   department: string;
@@ -16,6 +19,7 @@ interface Employee {
   phone?: string;
   start_date?: string;
   onboarding_status?: string;
+  status?: string;
 }
 
 export default function EmployeeDirectoryPage() {
@@ -23,17 +27,18 @@ export default function EmployeeDirectoryPage() {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date'>('name');
+  const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['active-employees'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
-        .select('id, full_name, position, department, employee_id, email, phone, start_date, onboarding_status')
+        .select('id, user_id, full_name, position, department, employee_id, email, phone, start_date, onboarding_status, status')
         .eq('status', 'Active')
         .order('full_name');
       if (error) throw error;
-      return data as Employee[];
+      return (data as any || []) as Employee[];
     },
   });
 
@@ -226,6 +231,21 @@ export default function EmployeeDirectoryPage() {
                       <span className="text-muted-foreground">{employee.phone}</span>
                     </div>
                   )}
+                </div>
+
+                {/* Admin Actions */}
+                <div className="flex gap-2 pt-3 border-t">
+                  <AdminResetPasswordDialog
+                    employeeId={employee.user_id}
+                    employeeName={employee.full_name}
+                    employeeEmail={employee.email}
+                  />
+                  <AdminAccountStatusDialog
+                    employeeId={employee.id}
+                    employeeName={employee.full_name}
+                    currentStatus={employee.status as AccountStatus}
+                    onStatusChange={() => queryClient.invalidateQueries({ queryKey: ['active-employees'] })}
+                  />
                 </div>
               </motion.div>
             );

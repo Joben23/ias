@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/hr/ProtectedRoute";
 import { EmployeeProtectedRoute } from "@/components/hr/EmployeeProtectedRoute";
 import { AppLayout } from "@/components/hr/AppLayout";
 import EmployeePortalPage from "./pages/EmployeePortalPage";
+import ForceChangePasswordPage from "./pages/ForceChangePasswordPage";
 import Index from "./pages/Index";
 import ApplicantsPage from "./pages/ApplicantsPage";
 import RecruitmentPage from "./pages/RecruitmentPage";
@@ -37,6 +38,9 @@ const App = () => (
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
+              
+              {/* Force change password route */}
+              <Route path="/auth/change-password" element={<ForceChangePasswordPage />} />
               
               {/* Employee Portal */}
               <Route

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, Clock, User, Award, Calendar, LogOut, ChevronLeft } from 'lucide-react';
+import { ChangePasswordSection } from '@/components/ChangePasswordSection';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -396,6 +397,11 @@ export default function EmployeePortalPage() {
                 </div>
               )}
             </CardContent>
+          </Card>
+
+          {/* Account Settings - Change Password */}
+          <Card className="lg:col-span-3">
+            <ChangePasswordSection />
           </Card>
         </div>
       </div>
