@@ -20,17 +20,17 @@ interface Employee {
 
 export default function EmployeeDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('');
-  const [positionFilter, setPositionFilter] = useState<string>('');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [positionFilter, setPositionFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'date'>('name');
 
-  const { data: employees = [], isLoading } = useQuery({
+  const { data: employees = [], isLoading, error } = useQuery({
     queryKey: ['active-employees'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position, department, employee_id, email, phone, start_date, onboarding_status')
-        .eq('onboarding_status', 'Employee Activated')
+        .eq('status', 'Active')
         .order('full_name');
       if (error) throw error;
       return data as Employee[];
@@ -53,12 +53,12 @@ export default function EmployeeDirectoryPage() {
     }
 
     // Department filter
-    if (departmentFilter) {
+    if (departmentFilter && departmentFilter !== 'all') {
       result = result.filter(emp => emp.department === departmentFilter);
     }
 
     // Position filter
-    if (positionFilter) {
+    if (positionFilter && positionFilter !== 'all') {
       result = result.filter(emp => emp.position === positionFilter);
     }
 
@@ -123,7 +123,7 @@ export default function EmployeeDirectoryPage() {
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Departments</SelectItem>
+              <SelectItem value="all">All Departments</SelectItem>
               {departments.map(dept => (
                 <SelectItem key={dept} value={dept}>{dept}</SelectItem>
               ))}
@@ -136,7 +136,7 @@ export default function EmployeeDirectoryPage() {
               <SelectValue placeholder="All Positions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Positions</SelectItem>
+              <SelectItem value="all">All Positions</SelectItem>
               {positions.map(pos => (
                 <SelectItem key={pos} value={pos}>{pos}</SelectItem>
               ))}
@@ -164,6 +164,11 @@ export default function EmployeeDirectoryPage() {
       {/* Employee grid */}
       {isLoading ? (
         <div className="card-elevated p-8 text-center text-muted-foreground">Loading employees...</div>
+      ) : error ? (
+        <div className="card-elevated p-8 text-center">
+          <p className="text-destructive font-medium">Error loading employees</p>
+          <p className="text-xs text-muted-foreground mt-1">{error.message}</p>
+        </div>
       ) : employees.length === 0 ? (
         <div className="card-elevated p-8 text-center">
           <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

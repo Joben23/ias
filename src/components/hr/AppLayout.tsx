@@ -23,23 +23,31 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useTheme } from '@/components/ThemeProvider';
 
-const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+const dashboardItem = { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard };
+
+const recruitmentItems = [
   { path: '/dashboard/applicants', label: 'Applicants', icon: Users },
   { path: '/dashboard/recruitment', label: 'Recruitment', icon: Briefcase },
+  { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
+  { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
+];
+
+const employeeItems = [
   { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
   { path: '/dashboard/employees', label: 'Employee Directory', icon: Users },
   { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
   { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
-  { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
-  { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
+];
+
+const insightsItems = [
   { path: '/dashboard/analytics', label: 'Analytics', icon: PieChart },
 ];
 
 const externalLinks = [
   { path: '/', label: 'Landing Page', icon: HeartPulse },
-  { path: '/careers', label: 'Careers Page', icon: Briefcase },
 ];
+
+const allNavItems = [dashboardItem, ...recruitmentItems, ...employeeItems, ...insightsItems];
 
 function AppSidebar() {
   const { state } = useSidebar();
@@ -60,18 +68,92 @@ function AppSidebar() {
       </div>
 
       <SidebarContent>
+        {/* Dashboard */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem key={dashboardItem.path}>
+                <SidebarMenuButton asChild tooltip={dashboardItem.label}>
+                  <NavLink
+                    to={dashboardItem.path}
+                    end={true}
+                    className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                  >
+                    <dashboardItem.icon className="w-5 h-5" />
+                    <span>{dashboardItem.label}</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Recruitment Flow */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
-            {!collapsed ? 'Navigation' : ''}
+            {!collapsed ? 'Recruitment Flow' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map(item => (
+              {recruitmentItems.map(item => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild tooltip={item.label}>
                     <NavLink
                       to={item.path}
-                      end={item.path === '/dashboard'}
+                      end={true}
+                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Employee Management */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+            {!collapsed ? 'Employee Management' : ''}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {employeeItems.map(item => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild tooltip={item.label}>
+                    <NavLink
+                      to={item.path}
+                      end={true}
+                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Insights */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+            {!collapsed ? 'Insights' : ''}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {insightsItems.map(item => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild tooltip={item.label}>
+                    <NavLink
+                      to={item.path}
+                      end={true}
                       className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                       activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
                     >
@@ -141,7 +223,7 @@ function ThemeToggle() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const currentPage = navItems.find(n => n.path === location.pathname)?.label || navItems.find(n => location.pathname.startsWith(n.path) && n.path !== '/dashboard')?.label || 'Dashboard';
+  const currentPage = allNavItems.find(n => n.path === location.pathname)?.label || allNavItems.find(n => location.pathname.startsWith(n.path) && n.path !== '/dashboard')?.label || 'Dashboard';
 
   return (
     <SidebarProvider>

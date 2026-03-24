@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import {
   HeartPulse, Briefcase, MapPin, Clock, ChevronRight,
   Shield, TrendingUp, Heart, Award, Building2, GraduationCap, Moon, Sun,
+  Search, Users,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { StaffLoginModal } from '@/components/StaffLoginModal';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PublicJob {
   id: string;
@@ -38,31 +41,38 @@ const stats = [
 ];
 
 export default function LandingPage() {
-  const [previewJobs, setPreviewJobs] = useState<PublicJob[]>([]);
-  const [totalJobs, setTotalJobs] = useState(0);
+  const [jobs, setJobs] = useState<PublicJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const { count } = await supabase
-        .from('job_postings')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'Open');
-      setTotalJobs(count || 0);
-
       const { data } = await supabase
         .from('job_postings')
         .select('id, title, department, position, employment_type, description, requirements, location, closing_date')
         .eq('status', 'Open')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      if (data) setPreviewJobs(data as PublicJob[]);
+        .order('created_at', { ascending: false });
+      if (data) setJobs(data as PublicJob[]);
       setLoading(false);
     };
     fetchJobs();
   }, []);
+
+  const departments = useMemo(() => [...new Set(jobs.map(j => j.department))], [jobs]);
+  const types = useMemo(() => [...new Set(jobs.map(j => j.employment_type))], [jobs]);
+
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(j => {
+      const matchesSearch = !search || j.title.toLowerCase().includes(search.toLowerCase()) || j.department.toLowerCase().includes(search.toLowerCase());
+      const matchesDept = deptFilter === 'all' || j.department === deptFilter;
+      const matchesType = typeFilter === 'all' || j.employment_type === typeFilter;
+      return matchesSearch && matchesDept && matchesType;
+    });
+  }, [jobs, search, deptFilter, typeFilter]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,14 +96,11 @@ export default function LandingPage() {
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-muted-foreground" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
             </button>
-            <Link to="/careers" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              View All Jobs
-            </Link>
             <button
-              onClick={() => setLoginModalOpen(true)}
+              onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
             >
-              Employee Login
+              View All Jobs
             </button>
           </div>
         </div>
@@ -220,17 +227,58 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Preview of Open Positions — top 3 */}
-      <section className="bg-card border-y border-border">
+      {/* Open Positions */}
+      <section id="jobs" className="bg-card border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-bold text-foreground">Open Positions</h2>
-            <p className="text-muted-foreground mt-3 max-w-lg mx-auto">View some of our available opportunities.</p>
+            <p className="text-muted-foreground mt-3 max-w-lg mx-auto">Browse all available opportunities and find the position that's right for you.</p>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search positions..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={deptFilter} onValueChange={setDeptFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(d => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Job Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {types.map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-sm text-muted-foreground">
+              {loading ? 'Loading...' : `${filteredJobs.length} position${filteredJobs.length !== 1 ? 's' : ''} found`}
+            </p>
           </div>
 
           {loading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
+              {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="card-elevated p-6 animate-pulse">
                   <div className="h-4 bg-muted rounded w-3/4 mb-3" />
                   <div className="h-3 bg-muted rounded w-1/2 mb-6" />
@@ -239,56 +287,56 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          ) : previewJobs.length === 0 ? (
+          ) : filteredJobs.length === 0 ? (
             <div className="text-center py-16">
               <Briefcase className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-              <p className="text-muted-foreground">No open positions at the moment. Check back soon!</p>
+              <p className="text-muted-foreground">
+                {jobs.length === 0 ? 'No open positions at the moment. Check back soon!' : 'No positions match your filters.'}
+              </p>
             </div>
           ) : (
-            <>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {previewJobs.map((job, i) => (
-                  <motion.div
-                    key={job.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.06 }}
-                    className="card-elevated p-6 hover:border-primary/30 transition-all group flex flex-col"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="bg-primary/10 p-2 rounded-lg">
-                        <Briefcase className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-pipeline-hired/10 text-pipeline-hired">Open</span>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredJobs.map((job, i) => (
+                <motion.div
+                  key={job.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06 }}
+                  className="card-elevated p-6 hover:border-primary/30 transition-all group flex flex-col"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="bg-primary/10 p-2 rounded-lg">
+                      <Briefcase className="w-4 h-4 text-primary" />
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{job.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">{job.description}</p>
-                    <div className="space-y-2 text-xs text-muted-foreground mb-4">
-                      <div className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {job.department}</div>
-                      <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.location || 'On-site'}</div>
-                      <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {job.employment_type}</div>
-                    </div>
-                    <Link
-                      to={`/careers/apply/${job.id}`}
-                      className="gradient-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium text-sm text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                    >
-                      Apply Now <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-              {totalJobs > 3 && (
-                <div className="text-center mt-10">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-pipeline-hired/10 text-pipeline-hired">Open</span>
+                  </div>
+                  <h3 className="font-display font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{job.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">{job.description}</p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(job.requirements || []).slice(0, 3).map(req => (
+                      <span key={req} className="text-[11px] px-2 py-0.5 bg-muted rounded-md text-muted-foreground">{req}</span>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2 text-xs text-muted-foreground mb-4">
+                    <div className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {job.department}</div>
+                    <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.location || 'On-site'}</div>
+                    <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {job.employment_type}</div>
+                    {job.closing_date && (
+                      <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Closes {job.closing_date}</div>
+                    )}
+                  </div>
                   <Link
-                    to="/careers"
-                    className="inline-flex items-center gap-2 gradient-primary text-primary-foreground px-8 py-3 rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+                    to={`/careers/apply/${job.id}`}
+                    className="gradient-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium text-sm text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
-                    View All {totalJobs} Jobs <ChevronRight className="w-4 h-4" />
+                    Apply Now <ChevronRight className="w-4 h-4" />
                   </Link>
-                </div>
-              )}
-            </>
+                </motion.div>
+              ))}
+            </div>
           )}
         </div>
       </section>

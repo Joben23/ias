@@ -20,7 +20,6 @@ import InterviewsPage from "./pages/InterviewsPage";
 import CandidateRankingPage from "./pages/CandidateRankingPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import LandingPage from "./pages/LandingPage";
-import CareersPage from "./pages/CareersPage";
 import JobApplicationPage from "./pages/JobApplicationPage";
 import NotFound from "./pages/NotFound";
 
@@ -37,7 +36,6 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/careers" element={<CareersPage />} />
               <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
               
               {/* Employee Portal */}
