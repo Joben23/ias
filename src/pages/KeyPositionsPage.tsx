@@ -193,9 +193,8 @@ export function KeyPositionsPage() {
   const openEditDialog = (position: KeyPosition) => {
     setEditingPosition(position);
     setFormData({
-      name: position.name,
+      position_name: position.position_name,
       department: position.department,
-      description: position.description,
       is_critical: position.is_critical,
     });
     setIsEditDialogOpen(true);
@@ -399,7 +398,7 @@ export function KeyPositionsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Position?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{positionToDelete?.name}"? This will also remove
+              Are you sure you want to delete "{positionToDelete?.position_name}"? This will also remove
               associated succession candidates and development plans. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

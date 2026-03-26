@@ -102,12 +102,18 @@ export function AdminResetPasswordDialog({
   const handlePasswordResetEmail = async () => {
     setLoading(true);
     try {
-      // Send email directly via Edge Function
-      const { error } = await supabase.functions.invoke('resend-send-email', {
-        body: {
-          to: employeeEmail,
-          subject: 'Reset Your Password - HRMS System',
-          html: `
+      // Send email directly via Edge Function - public endpoint
+      const response = await fetch(
+        'https://llraqbaooppyxzuipicl.supabase.co/functions/v1/resend-send-email',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: employeeEmail,
+            subject: 'Reset Your Password - HRMS System',
+            html: `
             <html>
               <body style="font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background: #f4f4f4; padding: 20px;">
                 <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -132,14 +138,17 @@ export function AdminResetPasswordDialog({
               </body>
             </html>
           `,
-          from: 'team@hrmsystem.com',
-        },
-      });
+            from: 'HR System <onboarding@resend.dev>',
+          }),
+        }
+      );
 
-      if (error) {
+      const data = await response.json();
+
+      if (!response.ok) {
         toast({
           title: 'Error',
-          description: 'Failed to send password reset email',
+          description: data?.error || 'Failed to send password reset email',
           variant: 'destructive',
         });
         setLoading(false);

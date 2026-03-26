@@ -44,6 +44,8 @@ import EssLearningPage from "./pages/EssLearningPage";
 import EssCompetenciesPage from "./pages/EssCompetenciesPage";
 import EssCareerPathPage from "./pages/EssCareerPathPage";
 import Hr2DashboardPage from "./pages/Hr2DashboardPage";
+import StaffLoginPage from "./pages/StaffLoginPage";
+import { AuthCallback } from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/stafflogin" element={<StaffLoginPage />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/careers/apply/:jobId" element={<JobApplicationPage />} />
 
                 {/* Force change password route */}

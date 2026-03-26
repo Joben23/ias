@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, AlertCircle, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertCircle, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -193,7 +194,8 @@ export function SuccessionCandidatesPage() {
       const { error } = await supabase
         .from('succession_candidates' as any)
         .update({
-          succession_order: formData.succession_order,
+          readiness_level: formData.readiness_level,
+          notes: formData.notes,
         })
         .eq('id', editingCandidate.id);
 
@@ -245,47 +247,13 @@ export function SuccessionCandidatesPage() {
     }
   };
 
-  const handleReorderCandidate = async (candidate: SuccessionCandidate, direction: 'up' | 'down') => {
-    const samePositionCandidates = candidates
-      .filter((c) => c.key_position_id === candidate.key_position_id)
-      .sort((a, b) => a.succession_order - b.succession_order);
-
-    const currentIndex = samePositionCandidates.findIndex((c) => c.id === candidate.id);
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-
-    if (newIndex < 0 || newIndex >= samePositionCandidates.length) return;
-
-    const targetCandidate = samePositionCandidates[newIndex];
-
-    // Swap orders
-    try {
-      await supabase
-        .from('succession_candidates' as any)
-        .update({ succession_order: targetCandidate.succession_order })
-        .eq('id', candidate.id);
-
-      await supabase
-        .from('succession_candidates' as any)
-        .update({ succession_order: candidate.succession_order })
-        .eq('id', targetCandidate.id);
-
-      fetchData();
-    } catch (error) {
-      console.error('Error reordering candidate:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to reorder candidates',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const openEditDialog = (candidate: SuccessionCandidate) => {
     setEditingCandidate(candidate);
     setFormData({
       employee_id: candidate.employee_id,
       key_position_id: candidate.key_position_id,
-      succession_order: candidate.succession_order,
+      readiness_level: candidate.readiness_level,
+      notes: candidate.notes,
     });
     setIsEditDialogOpen(true);
   };
@@ -330,8 +298,7 @@ export function SuccessionCandidatesPage() {
   const groupedCandidates = positions.reduce(
     (acc, position) => {
       const positionCandidates = filteredCandidates
-        .filter((c) => c.key_position_id === position.id)
-        .sort((a, b) => a.succession_order - b.succession_order);
+        .filter((c) => c.key_position_id === position.id);
 
       if (positionCandidates.length > 0) {
         acc[position.id] = { position, candidates: positionCandidates };

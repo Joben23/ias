@@ -114,153 +114,81 @@ export function ApplicantDetailDialog({ applicant, open, onOpenChange, onStatusC
   const handleHire = async () => {
     setHiring(true);
     try {
-      console.log('[HIRE-DIRECT] Starting hire process for:', applicant.id);
+      console.log('[HIRE] Starting hire process for:', applicant.id);
       
-      // 1. Fetch applicant details
-      const { data: applicantData, error: applicantError } = await supabase
-        .from('applicants')
-        .select('*')
-        .eq('id', applicant.id)
-        .single();
-      
-      if (applicantError || !applicantData) {
-        throw new Error('Applicant not found');
+      // Call backend edge function to create auth user + profile + role + employee
+      console.log('[HIRE] Invoking edge function: hire-applicant');
+      const { data, error } = await supabase.functions.invoke('hire-applicant', {
+        body: { applicant_id: applicant.id },
+      });
+
+      console.log('[HIRE] Edge function response:', { 
+        hasError: !!error, 
+        hasData: !!data,
+        data: data 
+      });
+
+      // Check for invoke errors (network, auth, etc.)
+      if (error) {
+        console.error('[HIRE] Edge function invoke error:', error);
+        throw new Error(`Edge function error: ${error.message || 'Failed to hire applicant'}`);
       }
-      
-      console.log('[HIRE-DIRECT] Applicant found:', applicantData.full_name);
-      
-      // 2. Check if already hired
-      if (applicantData.status === 'Hired') {
-        throw new Error('This applicant has already been hired');
+
+      // Check response data for business logic errors
+      if (!data) {
+        console.error('[HIRE] Empty response from edge function');
+        throw new Error('Edge function returned no data');
       }
-      
-      // 3. Generate credentials
-      const password = `MedHire${Math.random().toString(36).substr(-8)}!`;
-      const employeeId = `EMP-${Date.now()}-${Math.random().toString(36).substr(-4).toUpperCase()}`;
-      
-      console.log('[HIRE-DIRECT] Generated employee ID:', employeeId);
-      
-      // 4. Fetch job offer
-      const { data: offers } = await supabase
-        .from('job_offers')
-        .select('*')
-        .eq('applicant_id', applicant.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      const startDate = offers && offers.length > 0 
-        ? offers[0].start_date 
-        : new Date().toISOString().split('T')[0];
-      
-      console.log('[HIRE-DIRECT] Start date:', startDate);
-      
-      // 5. Create employee record (main action - fails if this fails)
-      console.log('[HIRE-DIRECT] Creating employee record...');
-      const { data: empData, error: empError } = await supabase
-        .from('employees')
-        .insert({
-          employee_id: employeeId,
-          full_name: applicantData.full_name,
-          email: applicantData.email,
-          phone: applicantData.phone || '',
-          position: applicantData.position_applied,
-          department: applicantData.department || '',
-          start_date: startDate,
-          status: 'Active',
-          onboarding_status: 'Pending',
-          applicant_id: applicant.id,
-          // Note: user_id would be created by auth system in production
-        })
-        .select()
-        .single();
-      
-      if (empError) {
-        console.error('[HIRE-DIRECT] Employee creation failed:', empError);
-        throw new Error(`Failed to create employee: ${empError.message}`);
+
+      if (!data.success) {
+        console.error('[HIRE] Business logic error:', data.error || data.details);
+        throw new Error(data.error || data.details || 'Backend returned error');
       }
-      
-      console.log('[HIRE-DIRECT] Employee record created');
-      
-      // 6. Create profile (non-blocking)
-      try {
-        await supabase.from('profiles').insert({
-          full_name: applicantData.full_name,
-          email: applicantData.email,
-          phone: applicantData.phone || '',
-          department: applicantData.department || '',
-          role: 'employee',
-        });
-        console.log('[HIRE-DIRECT] Profile created');
-      } catch (e) {
-        console.log('[HIRE-DIRECT] Profile creation skipped (non-critical):', e);
-      }
-      
-      // 7. Assign role (non-blocking)
-      try {
-        // Note: user_id would need to be from auth.users - skipping for now
-        // In production, the auth user creation would provide this
-        console.log('[HIRE-DIRECT] Role assignment skipped (requires auth user)');
-      } catch (e) {
-        console.log('[HIRE-DIRECT] Role assignment skipped (non-critical):', e);
-      }
-      
-      // 8. Update applicant to Hired (non-blocking)
-      try {
-        await supabase.from('applicants').update({ status: 'Hired' }).eq('id', applicant.id);
-        console.log('[HIRE-DIRECT] Applicant marked as hired');
-      } catch (e) {
-        console.log('[HIRE-DIRECT] Applicant update skipped (non-critical):', e);
-      }
-      
-      // 9. Update offer status (non-blocking)
-      if (offers && offers.length > 0) {
-        try {
-          await supabase.from('job_offers').update({ status: 'Offer Accepted' }).eq('id', offers[0].id);
-          console.log('[HIRE-DIRECT] Job offer status updated');
-        } catch (e) {
-          console.log('[HIRE-DIRECT] Offer update skipped (non-critical):', e);
-        }
-      }
-      
+
+      console.log('[HIRE] Backend response successful:', data);
+
       // Update local state
       setStatus('Hired');
       onStatusChange(applicant.id, 'Hired');
       onHire(applicant);
-      
-      console.log('[HIRE-DIRECT] SUCCESS');
-      
-      // Generate username from full name
-      const username = applicantData.full_name.toLowerCase().replace(/\s+/g, '.');
-      
+
+      console.log('[HIRE] SUCCESS');
+
       // Store credentials for display in modal
       setCredentials({
-        employeeId: employeeId,
-        username: username,
-        password: password,
-        startDate: startDate,
-        email: applicantData.email,
+        employeeId: data.employee_id,
+        username: data.username,
+        password: data.password,
+        startDate: data.start_date,
+        email: data.email,
       });
-      
+
       toast({
         title: '✅ Applicant Hired Successfully!',
         description: `Employee Account Created
-ID: ${employeeId}
-Username: ${username}
-Password: ${password}
-Start Date: ${startDate}`,
+ID: ${data.employee_id}
+Username: ${data.username}
+Password: ${data.password}
+Start Date: ${data.start_date}`,
       });
       
     } catch (err: any) {
-      console.error('[HIRE-DIRECT] Error:', err);
+      console.error('[HIRE] Error:', err);
       
-      let errorMessage = 'Failed to create employee account. Please try again.';
+      let errorMessage = 'Failed to create employee account. Check Supabase configuration.';
       
       if (err.message?.includes('Applicant not found')) {
         errorMessage = 'Applicant not found in system.';
-      } else if (err.message?.includes('already been hired')) {
+      } else if (err.message?.includes('already')) {
         errorMessage = 'This applicant has already been hired.';
       } else if (err.message?.includes('already exists')) {
         errorMessage = 'Employee with this email already exists.';
+      } else if (err.message?.includes('Missing configuration')) {
+        errorMessage = 'Supabase environment variables are not configured. Please contact administrator.';
+      } else if (err.message?.includes('Missing env variables')) {
+        errorMessage = 'Edge function configuration incomplete. Please check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.';
+      } else if (err.message?.includes('Edge function error')) {
+        errorMessage = err.message;
       } else if (err.message) {
         errorMessage = `Error: ${err.message}`;
       }

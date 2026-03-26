@@ -108,18 +108,22 @@ Deno.serve(async (req) => {
 
     // 6. Assign role (non-blocking)
     try {
-      await supabase.from('user_roles').insert({
+      const { error: roleError } = await supabase.from('user_roles').insert({
         user_id: userId,
         role: 'employee',
       });
-      console.log('[HIRE] Role assigned');
-    } catch (e) {
-      console.log('[HIRE] Role assignment skipped:', e);
+      if (roleError) {
+        console.warn('[HIRE] Role assignment warning:', roleError.message);
+      } else {
+        console.log('[HIRE] Role assigned');
+      }
+    } catch (e: any) {
+      console.warn('[HIRE] Role assignment exception:', e.message);
     }
 
     // 7. Create/update profile (non-blocking)
     try {
-      await supabase.from('profiles').upsert(
+      const { error: profileError } = await supabase.from('profiles').upsert(
         {
           id: userId,
           full_name: applicant.full_name,
@@ -130,27 +134,37 @@ Deno.serve(async (req) => {
         },
         { onConflict: 'id' }
       );
-      console.log('[HIRE] Profile created');
-    } catch (e) {
-      console.log('[HIRE] Profile creation skipped:', e);
+      if (profileError) {
+        console.warn('[HIRE] Profile update warning:', profileError.message);
+      } else {
+        console.log('[HIRE] Profile created');
+      }
+    } catch (e: any) {
+      console.warn('[HIRE] Profile creation exception:', e.message);
     }
 
     // 8. Get job offer (use defaults if not found)
     let startDate = new Date().toISOString().split('T')[0];
     try {
-      const { data: offers } = await supabase
+      const { data: offers, error: offerError } = await supabase
         .from('job_offers')
         .select('start_date')
         .eq('applicant_id', applicant_id)
         .order('created_at', { ascending: false })
         .limit(1);
       
-      if (offers?.length > 0 && offers[0].start_date) {
-        startDate = offers[0].start_date;
-        console.log('[HIRE] Job offer found');
+      if (offerError) {
+        console.warn('[HIRE] Offer fetch warning:', offerError.message);
       }
-    } catch (e) {
-      console.log('[HIRE] Offer fetch skipped:', e);
+      
+      if (offers && offers.length > 0 && offers[0].start_date) {
+        startDate = offers[0].start_date;
+        console.log('[HIRE] Job offer found:', startDate);
+      } else {
+        console.log('[HIRE] No job offer found, using current date');
+      }
+    } catch (e: any) {
+      console.warn('[HIRE] Offer fetch exception:', e.message);
     }
 
     // 9. Create employee record
@@ -181,10 +195,14 @@ Deno.serve(async (req) => {
 
     // 10. Update applicant to Hired (non-blocking)
     try {
-      await supabase.from('applicants').update({ status: 'Hired' }).eq('id', applicant.id);
-      console.log('[HIRE] Applicant marked as hired');
-    } catch (e) {
-      console.log('[HIRE] Applicant update skipped:', e);
+      const { error: updateError } = await supabase.from('applicants').update({ status: 'Hired' }).eq('id', applicant.id);
+      if (updateError) {
+        console.warn('[HIRE] Applicant update warning:', updateError.message);
+      } else {
+        console.log('[HIRE] Applicant marked as hired');
+      }
+    } catch (e: any) {
+      console.warn('[HIRE] Applicant update exception:', e.message);
     }
 
     // Success!
@@ -202,10 +220,15 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('[HIRE] ERROR:', error.message, error.stack);
+  } catch (error: any) {
+    console.error('[HIRE] ERROR:', error?.message, error?.stack);
     return new Response(
-      JSON.stringify({ error: 'Internal error', details: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: 'Internal error', 
+        details: error?.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

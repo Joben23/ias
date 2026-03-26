@@ -31,12 +31,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (data) setProfile(data as Profile);
+    try {
+      console.log('[AUTH] Fetching profile for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.warn('[AUTH] Profile fetch error:', error.message);
+        
+        // FALLBACK: If profile doesn't exist, create one from auth user metadata
+        console.log('[AUTH] Creating fallback profile from auth metadata');
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const fallbackProfile = {
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown',
+            email: user.email,
+            phone: user.user_metadata?.phone || null,
+            department: user.user_metadata?.department || 'Human Resources',
+            role: user.user_metadata?.role || 'employee',
+            avatar_url: user.user_metadata?.avatar_url || null,
+            must_change_password: !user.email_confirmed,
+          };
+          
+          setProfile(fallbackProfile as Profile);
+          console.log('[AUTH] Fallback profile created:', fallbackProfile);
+          
+          // Try to insert the profile into database for future use
+          try {
+            await supabase.from('profiles').insert(fallbackProfile);
+            console.log('[AUTH] Fallback profile persisted to database');
+          } catch (insertErr) {
+            console.warn('[AUTH] Could not persist fallback profile:', insertErr);
+          }
+        }
+        return;
+      }
+
+      if (data) {
+        console.log('[AUTH] Profile loaded:', data.email);
+        setProfile(data as Profile);
+      }
+    } catch (err) {
+      console.error('[AUTH] Unexpected error fetching profile:', err);
+    }
   };
 
   const refreshProfile = async () => {
@@ -44,15 +87,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('[AUTH] Setting up auth listener');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[AUTH] Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
+        
         if (session?.user) {
+          console.log('[AUTH] User logged in:', session.user.email);
           // Use setTimeout to avoid potential deadlocks with Supabase client
-          setTimeout(() => fetchProfile(session.user.id), 0);
+          setTimeout(() => {
+            console.log('[AUTH] Fetching profile after auth state change');
+            fetchProfile(session.user.id);
+          }, 0);
         } else {
+          console.log('[AUTH] User logged out');
           setProfile(null);
         }
         setLoading(false);
@@ -60,17 +112,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // Only set if not already set by onAuthStateChange
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        fetchProfile(session.user.id);
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('[AUTH] Existing session found:', session.user.email);
+          setSession(session);
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        } else {
+          console.log('[AUTH] No existing session');
+        }
+      } catch (err) {
+        console.error('[AUTH] Error checking session:', err);
       }
       setLoading(false);
-    });
+    })();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('[AUTH] Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

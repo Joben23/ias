@@ -391,8 +391,6 @@ export function DevelopmentPlansPage() {
                 Create Development Plan
               </Button>
             </div>
-              </Button>
-            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -413,10 +411,9 @@ export function DevelopmentPlansPage() {
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Plans</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Ongoing">Ongoing</SelectItem>
+            <SelectItem value="Active">Active</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="On Hold">On Hold</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -574,6 +571,10 @@ export function DevelopmentPlansPage() {
                 </Select>
               </div>
             </div>
+
+            <div>
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Textarea
                 id="edit-notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
