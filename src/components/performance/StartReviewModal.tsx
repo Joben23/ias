@@ -76,14 +76,14 @@ export function StartReviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Performance Review - {reviewType}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Performance Review - {reviewType}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Employee Info */}
-          <div className="bg-muted p-4 rounded-lg">
+          <div className="bg-muted/80 dark:bg-muted/60 p-4 rounded-lg border border-border">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Employee</p>
               <p className="font-semibold text-foreground">{employeeName}</p>
@@ -144,36 +144,36 @@ export function StartReviewModal({
 
           {/* Reviewer Name */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Reviewer Name</Label>
+            <Label className="text-sm font-medium text-foreground">Reviewer Name</Label>
             <input
               type="text"
               value={reviewerName}
               onChange={(e) => setReviewerName(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-input text-foreground placeholder:text-muted-foreground"
               placeholder="Your name"
             />
           </div>
 
           {/* Comments */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Review Comments *</Label>
+            <Label className="text-sm font-medium text-foreground">Review Comments *</Label>
             <Textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               placeholder="Provide detailed feedback and comments..."
               rows={4}
-              className="text-sm"
+              className="text-sm bg-input text-foreground placeholder:text-muted-foreground"
             />
             <p className="text-xs text-muted-foreground">{comments.length} characters</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-4 border-t border-border">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="w-full sm:w-auto px-3 py-2 text-sm"
             >
               Cancel
             </Button>
@@ -181,14 +181,14 @@ export function StartReviewModal({
               type="button"
               variant="outline"
               onClick={handleSaveDraft}
-              className="flex-1"
+              className="w-full sm:w-auto px-3 py-2 text-sm"
               disabled={loading}
             >
               Save Draft
             </Button>
             <Button
               onClick={handleSubmit}
-              className="flex-1 gradient-primary text-primary-foreground"
+              className="w-full sm:w-auto px-3 py-2 text-sm gradient-primary text-primary-foreground"
               disabled={loading}
             >
               {loading ? 'Submitting...' : 'Submit Review'}

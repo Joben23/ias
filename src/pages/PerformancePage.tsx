@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -138,12 +140,44 @@ export default function PerformancePage() {
   const [employees, setEmployees] = useState<Employee[]>(DEMO_EMPLOYEES);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>(DEMO_EMPLOYEES);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: dbEmployees = [], isLoading: isEmployeeLoading, error: employeeError } = useQuery({
+    queryKey: ['performanceEmployees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, full_name, position, department, status, start_date')
+        .order('full_name');
+      if (error) throw error;
+
+      return (data as any[] || []).map((emp) => ({
+        id: String(emp.id),
+        name: emp.full_name || 'Unknown',
+        position: emp.position || 'N/A',
+        department: emp.department || 'General',
+        reviewStatus: (emp.status === 'Inactive' ? 'overdue' : emp.status === 'Probation' ? 'in-progress' : 'pending') as ReviewStatus,
+        currentScore: undefined,
+        nextReviewDate: emp.start_date || '',
+        stageName: emp.status === 'Probation' ? '60-Day Review' : '30-Day Review',
+      }));
+    },
+    staleTime: 120_000,
+    cacheTime: 300_000,
+  });
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortBy, setSortBy] = useState<SortBy>('name');
 
   // Modal states
   const [startReviewEmployee, setStartReviewEmployee] = useState<Employee | null>(null);
   const [scheduleReviewEmployee, setScheduleReviewEmployee] = useState<Employee | null>(null);
+
+  useEffect(() => {
+    if (dbEmployees && dbEmployees.length > 0) {
+      setEmployees(dbEmployees);
+    }
+  }, [dbEmployees]);
   const [viewDetailsReview, setViewDetailsReview] = useState<ReviewDetails | null>(null);
   const [confirmPermanentEmployee, setConfirmPermanentEmployee] = useState<Employee | null>(null);
   const [extendProbationEmployee, setExtendProbationEmployee] = useState<Employee | null>(null);
@@ -221,6 +255,34 @@ export default function PerformancePage() {
     setTerminateEmployee(employee);
   };
 
+  const handleExportReport = () => {
+    const csvHeader = 'Name,Position,Department,Review Status,Next Review Date\n';
+    const csvRows = filteredEmployees.map((emp) =>
+      `${emp.name},${emp.position},${emp.department},${emp.reviewStatus},${emp.nextReviewDate || ''}`
+    );
+    const csvContent = `data:text/csv;charset=utf-8,${[csvHeader, ...csvRows].join('\n')}`;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `performance-report-${new Date().toISOString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Exported',
+      description: 'Performance report has been exported as CSV.',
+    });
+  };
+
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+    toast({
+      title: 'Settings',
+      description: 'This demo opens settings controls (expand as needed).',
+    });
+  };
+
   // Submit handlers
   const handleStartReviewSubmit = () => {
     if (startReviewEmployee) {
@@ -230,6 +292,7 @@ export default function PerformancePage() {
           : emp
       );
       setEmployees(updated);
+      queryClient.invalidateQueries({ queryKey: ['performanceEmployees'] });
       setStartReviewEmployee(null);
       toast({
         title: 'Success',
@@ -246,6 +309,7 @@ export default function PerformancePage() {
           : emp
       );
       setEmployees(updated);
+      queryClient.invalidateQueries({ queryKey: ['performanceEmployees'] });
       setScheduleReviewEmployee(null);
       toast({
         title: 'Success',
@@ -258,6 +322,7 @@ export default function PerformancePage() {
     if (confirmPermanentEmployee) {
       const updated = employees.filter((emp) => emp.id !== confirmPermanentEmployee.id);
       setEmployees(updated);
+      queryClient.invalidateQueries({ queryKey: ['performanceEmployees'] });
       setConfirmPermanentEmployee(null);
       toast({
         title: 'Success',
@@ -280,6 +345,7 @@ export default function PerformancePage() {
     if (terminateEmployee) {
       const updated = employees.filter((emp) => emp.id !== terminateEmployee.id);
       setEmployees(updated);
+      queryClient.invalidateQueries({ queryKey: ['performanceEmployees'] });
       setTerminateEmployee(null);
       toast({
         title: 'Success',
@@ -292,39 +358,50 @@ export default function PerformancePage() {
   const analyticsData = generateDemoAnalyticsData();
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 md:px-8">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Performance Management</h1>
-        <p className="text-muted-foreground">
-          Manage employee onboarding, track performance reviews, and make employment decisions
-        </p>
-      </motion.div>
+    <div className="space-y-6 p-4 md:p-6 bg-background">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Performance Management</h1>
+          <p className="text-muted-foreground text-sm mt-1">All employee performance metrics and review workflows</p>
+        </div>
 
-      {/* Action Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex flex-wrap gap-2 mb-8"
-      >
-        <Button
-          onClick={() => window.location.reload()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </Button>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Export Report
-        </Button>
-        <Button variant="outline" className="flex items-center gap-2 ml-auto">
-          <Settings className="w-4 h-4" />
-          Settings
-        </Button>
-      </motion.div>
+        {/* Action Buttons */}
+        <Card className="card-elevated p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+            <Button onClick={handleExportReport} variant="outline" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Export Report
+            </Button>
+            <Button onClick={handleOpenSettings} variant="outline" className="flex items-center gap-2 ml-auto">
+              <Settings className="w-4 h-4" />
+              Settings
+            </Button>
+          </div>
+        </Card>
+      </div>
+
+      {isSettingsOpen && (
+        <Card className="card-elevated p-4 mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-lg font-display font-semibold text-foreground">Performance Settings</h3>
+              <p className="text-sm text-muted-foreground">Configure auto-refresh and reporting preferences.</p>
+            </div>
+            <Button onClick={() => setIsSettingsOpen(false)} variant="outline" className="text-xs px-3">
+              Close
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Process Timeline */}
       <motion.div
@@ -333,9 +410,10 @@ export default function PerformancePage() {
         transition={{ delay: 0.15 }}
         className="mb-8"
       >
-        <Card>
-          <div className="p-6">
-            <h2 className="text-xl font-bold mb-6">Probation Process Timeline</h2>
+        <Card className="card-elevated p-4">
+          <div>
+            <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">Probation Process Timeline</h2>
+            <p className="text-sm text-muted-foreground mb-4">Review and confirm probation status for each stage</p>
             <ProcessTimeline stages={[
               { id: 1, label: '30-Day Review', days: 30, status: 'completed', completedDate: 'Jan 25, 2024' },
               { id: 2, label: '60-Day Review', days: 60, status: 'in-progress' },
@@ -353,15 +431,18 @@ export default function PerformancePage() {
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <SearchFilterBar
-          searchQuery={searchQuery}
-          filterStatus={filterStatus}
-          sortBy={sortBy}
-          resultCount={filteredEmployees.length}
-          onSearchChange={setSearchQuery}
-          onFilterChange={setFilterStatus}
-          onSortChange={setSortBy}
-        />
+        <Card className="card-elevated p-4">
+          <h3 className="text-lg font-display font-semibold text-foreground mb-2">Search & Filter</h3>
+          <SearchFilterBar
+            searchQuery={searchQuery}
+            filterStatus={filterStatus}
+            sortBy={sortBy}
+            resultCount={filteredEmployees.length}
+            onSearchChange={setSearchQuery}
+            onFilterChange={setFilterStatus}
+            onSortChange={setSortBy}
+          />
+        </Card>
       </motion.div>
 
       {/* Performance Analytics */}
@@ -371,10 +452,8 @@ export default function PerformancePage() {
         transition={{ delay: 0.25 }}
         className="mb-8"
       >
-        <Card>
-          <div className="p-6">
-            <PerformanceAnalytics data={analyticsData} />
-          </div>
+        <Card className="card-elevated p-4">
+          <PerformanceAnalytics data={analyticsData} />
         </Card>
       </motion.div>
 
@@ -384,8 +463,25 @@ export default function PerformancePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-xl font-bold mb-4">Employee Reviews ({filteredEmployees.length})</h2>
-        {filteredEmployees.length > 0 ? (
+        <h2 className="text-xl md:text-2xl font-display font-semibold mb-4 text-foreground">Employee Reviews ({filteredEmployees.length})</h2>
+        {isEmployeeLoading ? (
+          <div className="card-elevated p-8 text-center text-muted-foreground">Loading employees...</div>
+        ) : employeeError ? (
+          <div className="card-elevated p-8 text-center">
+            <p className="text-destructive font-medium">Error loading employees</p>
+            <p className="text-xs text-muted-foreground mt-1">{(employeeError as any)?.message}</p>
+          </div>
+        ) : employees.length === 0 ? (
+          <div className="card-elevated p-8 text-center">
+            <p className="text-muted-foreground font-medium">No employees found</p>
+            <p className="text-xs text-muted-foreground mt-1">Employees will appear here after completing onboarding</p>
+          </div>
+        ) : filteredEmployees.length === 0 ? (
+          <div className="card-elevated p-8 text-center">
+            <p className="text-muted-foreground font-medium">No employees match your filters</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search criteria</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredEmployees.map((employee, index) => (
               <motion.div

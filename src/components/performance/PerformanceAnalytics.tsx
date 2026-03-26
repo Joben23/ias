@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
@@ -19,6 +20,24 @@ interface PerformanceAnalyticsProps {
 }
 
 export function PerformanceAnalytics({ data }: PerformanceAnalyticsProps) {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const axisColor = isDark ? '#ffffff' : '#000000';
+  const mutedColor = isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.65)';
+  const cardBg = isDark ? 'var(--card)' : 'var(--card)';
+
   const stats = [
     {
       label: 'Average Score',
@@ -88,32 +107,37 @@ export function PerformanceAnalytics({ data }: PerformanceAnalyticsProps) {
         className="border border-border rounded-lg bg-card p-6"
       >
         <div className="mb-6">
-          <h3 className="font-semibold text-lg flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
+          <h3 className="text-xl font-display font-semibold flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
             Performance Trend (Last 8 Weeks)
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">Average employee scores over time</p>
+          <p className="text-sm text-muted-foreground mt-1">Average employee scores over time</p>
         </div>
 
         {data.trendData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.trendData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'} />
               <XAxis
                 dataKey="week"
-                stroke="var(--muted-foreground)"
-                style={{ fontSize: '12px' }}
+                stroke={axisColor}
+                tick={{ fill: axisColor, fontSize: '12px' }}
+                axisLine={{ stroke: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}
+                tickLine={false}
               />
               <YAxis
                 domain={[0, 100]}
-                stroke="var(--muted-foreground)"
-                style={{ fontSize: '12px' }}
+                stroke={axisColor}
+                tick={{ fill: axisColor, fontSize: '12px' }}
+                axisLine={{ stroke: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }}
+                tickLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
+                  backgroundColor: cardBg,
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
                   borderRadius: '8px',
+                  color: axisColor,
                 }}
                 labelStyle={{ color: 'var(--foreground)' }}
                 formatter={(value) => `${value}%`}
