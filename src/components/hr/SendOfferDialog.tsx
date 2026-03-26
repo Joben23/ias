@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Send, Loader2, DollarSign, Calendar, FileText } from 'lucide-react';
+import { Send, Loader2, DollarSign, Calendar, FileText, Mail } from 'lucide-react';
 
 interface Props {
   applicantId: string;
   candidateName: string;
+  applicantEmail: string;
   position: string;
   department: string;
   open: boolean;
@@ -19,7 +20,7 @@ interface Props {
   onOfferSent: () => void;
 }
 
-export function SendOfferDialog({ applicantId, candidateName, position, department, open, onOpenChange, onOfferSent }: Props) {
+export function SendOfferDialog({ applicantId, candidateName, applicantEmail, position, department, open, onOpenChange, onOfferSent }: Props) {
   const [loading, setLoading] = useState(false);
   const [salary, setSalary] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -70,6 +71,7 @@ export function SendOfferDialog({ applicantId, candidateName, position, departme
         <div className="card-elevated p-3 bg-primary/5 border-primary/20">
           <p className="text-sm font-medium text-foreground">{candidateName}</p>
           <p className="text-xs text-muted-foreground">{position} · {department}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1"><Mail className="w-3 h-3" /> {applicantEmail}</p>
         </div>
 
         <div className="space-y-4 mt-2">
@@ -80,7 +82,7 @@ export function SendOfferDialog({ applicantId, candidateName, position, departme
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Start Date</Label>
+              <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-black dark:text-white" /> Start Date</Label>
               <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">

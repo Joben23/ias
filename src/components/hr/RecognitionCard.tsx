@@ -12,9 +12,10 @@ const awardIcons: Record<string, typeof Award> = {
 interface RecognitionCardProps {
   recognition: Recognition;
   index?: number;
+  onClick?: (recognition: Recognition) => void;
 }
 
-export function RecognitionCard({ recognition, index = 0 }: RecognitionCardProps) {
+export function RecognitionCard({ recognition, index = 0, onClick }: RecognitionCardProps) {
   const initials = recognition.employeeName.split(' ').map(n => n[0]).join('').slice(0, 2);
   const IconComponent = awardIcons[recognition.awardType] || Award;
 
@@ -23,7 +24,8 @@ export function RecognitionCard({ recognition, index = 0 }: RecognitionCardProps
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.4 }}
-      className="card-elevated p-5 hover:border-accent/30 transition-all"
+      className="card-elevated p-5 hover:border-accent/30 transition-all cursor-pointer"
+      onClick={() => onClick?.(recognition)}
     >
       <div className="flex items-start gap-3 mb-3">
         <div className="gradient-warm w-11 h-11 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-sm shrink-0">
@@ -45,16 +47,8 @@ export function RecognitionCard({ recognition, index = 0 }: RecognitionCardProps
 
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">{recognition.description}</p>
 
-      <div className="flex items-center gap-4 pt-3 border-t border-border">
-        <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors">
-          <Heart className="w-4 h-4" />
-          {recognition.likes}
-        </button>
-        <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-          <MessageCircle className="w-4 h-4" />
-          {recognition.comments}
-        </button>
-        <span className="text-xs text-muted-foreground ml-auto">{recognition.date}</span>
+      <div className="flex items-center justify-end pt-3 border-t border-border">
+        <span className="text-xs text-muted-foreground">{recognition.date}</span>
       </div>
     </motion.div>
   );

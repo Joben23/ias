@@ -271,6 +271,7 @@ export default function JobApplicationPage() {
               {submitting ? 'Submitting...' : 'Submit Application'}
             </Button>
           </form>
+
         </motion.div>
       </div>
     </div>

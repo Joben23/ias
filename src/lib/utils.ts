@@ -7,12 +7,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export async function hasRole(userId: string, role: string): Promise<boolean> {
+  const normalizedRole = role.split(':')[0]; // remove unwanted suffixes like hr:1
   try {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role)
+      .eq('role', normalizedRole)
       .single();
 
     return !error && !!data;

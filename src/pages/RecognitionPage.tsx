@@ -16,6 +16,8 @@ const awardCategories = [
 export default function RecognitionPage() {
   const [recognitions, setRecognitions] = useState<Recognition[]>(initialRecognitions);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedRecognition, setSelectedRecognition] = useState<Recognition | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     const fetchRecognitions = async () => {
@@ -60,6 +62,11 @@ export default function RecognitionPage() {
     } else {
       setRecognitions(prev => [rec, ...prev]);
     }
+  };
+
+  const handleRecognitionClick = (recognition: Recognition) => {
+    setSelectedRecognition(recognition);
+    setDetailsOpen(true);
   };
 
   return (
@@ -111,10 +118,41 @@ export default function RecognitionPage() {
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Recognition Feed</h2>
         <div className="grid md:grid-cols-2 gap-4">
           {recognitions.map((rec, i) => (
-            <RecognitionCard key={rec.id} recognition={rec} index={i} />
+            <RecognitionCard key={rec.id} recognition={rec} index={i} onClick={handleRecognitionClick} />
           ))}
         </div>
       </div>
+
+      {/* Recognition Details */}
+      {selectedRecognition && detailsOpen && (
+        <div className="card-elevated p-6">
+          <h3 className="text-lg font-semibold mb-4">Recognition Details</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="gradient-warm w-16 h-16 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-lg">
+                {selectedRecognition.employeeName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </div>
+              <div>
+                <h4 className="text-xl font-semibold text-foreground">{selectedRecognition.employeeName}</h4>
+                <p className="text-muted-foreground">{selectedRecognition.position} · {selectedRecognition.department}</p>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-semibold">
+              <Award className="w-4 h-4" />
+              {selectedRecognition.awardType}
+            </div>
+            <p className="text-muted-foreground leading-relaxed">{selectedRecognition.description}</p>
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>Likes: {selectedRecognition.likes}</span>
+                <span>Comments: {selectedRecognition.comments}</span>
+              </div>
+              <span className="text-sm text-muted-foreground">{selectedRecognition.date}</span>
+            </div>
+          </div>
+          <button onClick={() => setDetailsOpen(false)} className="mt-4 px-4 py-2 bg-muted rounded-lg text-muted-foreground hover:bg-muted/80">Close</button>
+        </div>
+      )}
     </div>
   );
 }

@@ -48,6 +48,9 @@ export function StaffLoginModal({ open, onOpenChange }: StaffLoginModalProps) {
         hasRole(userId, 'employee')
       ]);
 
+      // Scroll to top before navigating
+      window.scrollTo(0, 0);
+
       if (isAdmin || isHR) {
         navigate('/dashboard', { replace: true });
         onOpenChange(false);
@@ -126,25 +129,76 @@ export function StaffLoginModal({ open, onOpenChange }: StaffLoginModalProps) {
     e.preventDefault();
     setResetLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/`,
-    });
+    try {
+      const emailBody = {
+        to: resetEmail,
+        subject: 'Reset Your Password - HRMS System',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #667eea; margin-top: 0;">Reset Your Password</h2>
+                <p>Hello,</p>
+                <p>We received a request to reset your password for your HRMS account. Click the link below to reset it.</p>
+                <p>
+                  <a href="${window.location.origin}/auth/change-password" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                    Reset Password
+                  </a>
+                </p>
+                <p style="font-size: 12px; color: #999;">If you did not request this, please ignore this email. This link expires in 24 hours.</p>
+              </div>
+            </body>
+          </html>
+        `,
+        from: 'team@hrmsystem.com',
+      };
 
-    setResetLoading(false);
+      console.log('Calling resend-send-email function...');
 
-    if (error) {
+      // Get current session for auth header
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { data, error } = await supabase.functions.invoke('resend-send-email', {
+        body: emailBody,
+        headers: session?.access_token ? {
+          'Authorization': `Bearer ${session.access_token}`
+        } : {},
+      });
+
+      console.log('Function response:', { data, error });
+
+      setResetLoading(false);
+
+      if (error) {
+        console.error('Function error details:', error);
+        toast({
+          title: 'Error Sending Email',
+          description: `${error.message || 'Failed to send email. Please check Supabase Edge Function logs.'}`,
+          variant: 'destructive',
+        });
+      } else if (data?.ok) {
+        toast({
+          title: 'Success!',
+          description: 'Password reset email sent. Check your inbox for instructions.',
+        });
+        setShowReset(false);
+        setResetEmail('');
+      } else {
+        toast({
+          title: 'Error',
+          description: data?.error || 'Failed to send password reset email.',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      setResetLoading(false);
+      console.error('Caught error:', err);
       toast({
         title: 'Error',
-        description: 'Failed to send password reset email.',
+        description: err instanceof Error ? err.message : 'An error occurred. Please try again.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Password reset sent',
-        description: 'Check your email for password reset instructions.',
-      });
-      setShowReset(false);
-      setResetEmail('');
     }
   };
 

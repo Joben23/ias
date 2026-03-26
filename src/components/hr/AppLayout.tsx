@@ -1,9 +1,10 @@
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
   HeartPulse, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
+  BookOpen, GraduationCap, Target, UserCheck, ChevronDown, Check,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import { NotificationBell } from '@/components/hr/NotificationBell';
@@ -20,50 +21,121 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { NavLink } from '@/components/NavLink';
 import { useTheme } from '@/components/ThemeProvider';
+import { useHRModule, HR_MODULES, type HRModule } from '@/contexts/HRModuleContext';
 
-const dashboardItem = { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard };
+// Navigation configurations for different HR modules
+const getNavigationConfig = (hrModule: HRModule) => {
+  const basePath = `/${hrModule}`;
 
-const recruitmentItems = [
-  { path: '/dashboard/applicants', label: 'Applicants', icon: Users },
-  { path: '/dashboard/recruitment', label: 'Recruitment', icon: Briefcase },
-  { path: '/dashboard/interviews', label: 'Interviews', icon: CalendarCheck },
-  { path: '/dashboard/rankings', label: 'Rankings', icon: Trophy },
-];
+  switch (hrModule) {
+    case 'hr1':
+      return {
+        dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
+        recruitment: [
+          { path: `${basePath}/applicants`, label: 'Applicants', icon: Users },
+          { path: `${basePath}/recruitment`, label: 'Recruitment', icon: Briefcase },
+          { path: `${basePath}/interviews`, label: 'Interviews', icon: CalendarCheck },
+          { path: `${basePath}/rankings`, label: 'Rankings', icon: Trophy },
+        ],
+        employee: [
+          { path: `${basePath}/onboarding`, label: 'Onboarding', icon: UserPlus },
+          { path: `${basePath}/employees`, label: 'Employee Directory', icon: Users },
+          { path: `${basePath}/performance`, label: 'Performance', icon: BarChart3 },
+          { path: `${basePath}/recognition`, label: 'Recognition', icon: Award },
+        ],
+        insights: [
+          { path: `${basePath}/analytics`, label: 'Analytics', icon: PieChart },
+        ],
+      };
 
-const employeeItems = [
-  { path: '/dashboard/onboarding', label: 'Onboarding', icon: UserPlus },
-  { path: '/dashboard/employees', label: 'Employee Directory', icon: Users },
-  { path: '/dashboard/performance', label: 'Performance', icon: BarChart3 },
-  { path: '/dashboard/recognition', label: 'Recognition', icon: Award },
-];
+    case 'hr2':
+      return {
+        dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
+        learning: [
+          { path: `${basePath}/learning`, label: 'Learning Management', icon: BookOpen },
+          { path: `${basePath}/training`, label: 'Training Management', icon: GraduationCap },
+          { path: `${basePath}/succession`, label: 'Succession Planning', icon: Target },
+          { path: `${basePath}/ess`, label: 'Employee Self-Service', icon: UserCheck },
+          { path: `${basePath}/competency`, label: 'Competency Management', icon: Award },
+        ],
+      };
 
-const insightsItems = [
-  { path: '/dashboard/analytics', label: 'Analytics', icon: PieChart },
-];
+    default:
+      return {
+        dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
+      };
+  }
+};
 
 const externalLinks = [
   { path: '/', label: 'Landing Page', icon: HeartPulse },
 ];
 
-const allNavItems = [dashboardItem, ...recruitmentItems, ...employeeItems, ...insightsItems];
-
 function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const { selectedModule, setSelectedModule, currentModuleInfo } = useHRModule();
+  const navigate = useNavigate();
+  const navConfig = getNavigationConfig(selectedModule);
+
+  const handleModuleSwitch = (moduleId: HRModule) => {
+    setSelectedModule(moduleId);
+    // Navigate to the dashboard of the new module
+    navigate(`/${moduleId}/dashboard`);
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      {/* HR Module Selector */}
       <div className={`p-4 flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
         <div className="gradient-primary p-2 rounded-xl shrink-0">
           <HeartPulse className="w-5 h-5 text-primary-foreground" />
         </div>
-        {!collapsed && (
-          <div>
-            <h1 className="font-display font-bold text-sidebar-foreground text-lg leading-tight">Human Resources 1</h1>
-            <p className="text-[11px] text-sidebar-foreground/50">Hospital HR System</p>
-          </div>
+        {!collapsed ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex-1 justify-start p-0 h-auto font-display font-bold text-sidebar-foreground text-sm leading-tight hover:bg-transparent min-w-0"
+              >
+                <div className="text-left min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">{currentModuleInfo.name}</span>
+                    <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-sidebar-foreground/50 truncate">Hospital HR System</p>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              {Object.values(HR_MODULES).map((module) => (
+                <DropdownMenuItem
+                  key={module.id}
+                  onClick={() => handleModuleSwitch(module.id)}
+                  className="flex items-center gap-3 p-3"
+                >
+                  <div className="flex-1">
+                    <div className="font-medium">{module.name}</div>
+                    <div className="text-sm text-muted-foreground">{module.description}</div>
+                  </div>
+                  {selectedModule === module.id && (
+                    <Check className="w-4 h-4 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="w-5 h-5 bg-primary/20 rounded" />
         )}
       </div>
 
@@ -72,16 +144,16 @@ function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem key={dashboardItem.path}>
-                <SidebarMenuButton asChild tooltip={dashboardItem.label}>
+              <SidebarMenuItem key={navConfig.dashboard.path}>
+                <SidebarMenuButton asChild tooltip={navConfig.dashboard.label}>
                   <NavLink
-                    to={dashboardItem.path}
+                    to={navConfig.dashboard.path}
                     end={true}
                     className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
                   >
-                    <dashboardItem.icon className="w-5 h-5" />
-                    <span>{dashboardItem.label}</span>
+                    <navConfig.dashboard.icon className="w-5 h-5" />
+                    <span>{navConfig.dashboard.label}</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -89,84 +161,120 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Recruitment Flow */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
-            {!collapsed ? 'Recruitment Flow' : ''}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {recruitmentItems.map(item => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <NavLink
-                      to={item.path}
-                      end={true}
-                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Dynamic Navigation Groups */}
+        {selectedModule === 'hr1' && (
+          <>
+            {/* Recruitment Flow */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Recruitment Flow' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.recruitment?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-        {/* Employee Management */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
-            {!collapsed ? 'Employee Management' : ''}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {employeeItems.map(item => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <NavLink
-                      to={item.path}
-                      end={true}
-                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            {/* Employee Management */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Employee Management' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.employee?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-        {/* Insights */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
-            {!collapsed ? 'Insights' : ''}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {insightsItems.map(item => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <NavLink
-                      to={item.path}
-                      end={true}
-                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+            {/* Insights */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Insights' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.insights?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
 
+        {selectedModule === 'hr2' && (
+          <>
+            {/* Learning & Development */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Learning & Development' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.learning?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+
+        {/* Public Pages */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
             {!collapsed ? 'Public Pages' : ''}
@@ -193,9 +301,9 @@ function AppSidebar() {
 
       {!collapsed && (
         <div className="p-4 m-3 rounded-xl bg-sidebar-accent border border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/60 mb-1">Talent Acquisition</p>
-          <p className="text-sm font-semibold text-sidebar-foreground">Workforce Entry</p>
-          <p className="text-[11px] text-sidebar-foreground/40 mt-1">HR Subsystem v1.0</p>
+          <p className="text-xs text-sidebar-foreground/60 mb-1">{currentModuleInfo.subtitle}</p>
+          <p className="text-sm font-semibold text-sidebar-foreground">{currentModuleInfo.description}</p>
+          <p className="text-[11px] text-sidebar-foreground/40 mt-1">HR Subsystem {currentModuleInfo.version}</p>
         </div>
       )}
     </Sidebar>
@@ -223,7 +331,21 @@ function ThemeToggle() {
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const currentPage = allNavItems.find(n => n.path === location.pathname)?.label || allNavItems.find(n => location.pathname.startsWith(n.path) && n.path !== '/dashboard')?.label || 'Dashboard';
+  const { selectedModule } = useHRModule();
+  const navConfig = getNavigationConfig(selectedModule);
+
+  // Get all navigation items for the current module
+  const allNavItems = [
+    navConfig.dashboard,
+    ...(navConfig.recruitment || []),
+    ...(navConfig.employee || []),
+    ...(navConfig.insights || []),
+    ...(navConfig.learning || []),
+  ];
+
+  const currentPage = allNavItems.find(n => n.path === location.pathname)?.label ||
+                     allNavItems.find(n => location.pathname.startsWith(n.path) && n.path !== `/${selectedModule}/dashboard`)?.label ||
+                     'Dashboard';
 
   return (
     <SidebarProvider>
@@ -236,7 +358,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger className="text-foreground" aria-label="Toggle sidebar" />
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>HR</span>
+              <span>{HR_MODULES[selectedModule].name}</span>
               <ChevronRight className="w-3.5 h-3.5" />
               <span className="text-foreground font-medium">{currentPage}</span>
             </div>

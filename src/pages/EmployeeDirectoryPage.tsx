@@ -30,12 +30,11 @@ export default function EmployeeDirectoryPage() {
   const queryClient = useQueryClient();
 
   const { data: employees = [], isLoading, error } = useQuery({
-    queryKey: ['active-employees'],
+    queryKey: ['employees'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
         .select('id, user_id, full_name, position, department, employee_id, email, phone, start_date, onboarding_status, status')
-        .eq('status', 'Active')
         .order('full_name');
       if (error) throw error;
       return (data as any || []) as Employee[];
@@ -100,7 +99,7 @@ export default function EmployeeDirectoryPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground">Employee Directory</h1>
-        <p className="text-muted-foreground text-sm mt-1">Active hospital employees and their information</p>
+        <p className="text-muted-foreground text-sm mt-1">All hospital employees and their information</p>
       </div>
 
       {/* Search and Filters */}
@@ -177,7 +176,7 @@ export default function EmployeeDirectoryPage() {
       ) : employees.length === 0 ? (
         <div className="card-elevated p-8 text-center">
           <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground font-medium">No active employees found</p>
+          <p className="text-muted-foreground font-medium">No employees found</p>
           <p className="text-xs text-muted-foreground mt-1">Employees will appear here after completing onboarding</p>
         </div>
       ) : filteredEmployees.length === 0 ? (
@@ -187,10 +186,19 @@ export default function EmployeeDirectoryPage() {
           <p className="text-xs text-muted-foreground mt-1">Try adjusting your search criteria</p>
         </div>
       ) : (
-        <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div>
+          <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredEmployees.map((employee, i) => {
             const initials = employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2);
             const deptColor = departmentColors[employee.department] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+
+            // Status badge styling
+            let statusColor = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            if (employee.status === 'Inactive') {
+              statusColor = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            } else if (employee.status === 'Probation') {
+              statusColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            }
 
             return (
               <motion.div
@@ -200,14 +208,17 @@ export default function EmployeeDirectoryPage() {
                 transition={{ delay: i * 0.05, duration: 0.4 }}
                 className="card-elevated hover:shadow-md transition-shadow p-5"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="gradient-primary w-12 h-12 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="gradient-primary w-12 h-12 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-sm flex-shrink-0">
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-display font-semibold text-foreground truncate">{employee.full_name}</h4>
                     <p className="text-sm text-muted-foreground">{employee.employee_id}</p>
                   </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${statusColor}`}>
+                    {employee.status || 'Active'}
+                  </span>
                 </div>
 
                 <div className="space-y-2">
@@ -244,12 +255,13 @@ export default function EmployeeDirectoryPage() {
                     employeeId={employee.id}
                     employeeName={employee.full_name}
                     currentStatus={employee.status as AccountStatus}
-                    onStatusChange={() => queryClient.invalidateQueries({ queryKey: ['active-employees'] })}
+                    onStatusChange={() => queryClient.invalidateQueries({ queryKey: ['employees'] })}
                   />
                 </div>
               </motion.div>
             );
           })}
+        </div>
         </div>
       )}
     </div>

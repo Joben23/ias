@@ -279,18 +279,53 @@ return (
     <div className="grid lg:grid-cols-3 gap-6">
       <motion.div className="lg:col-span-2 card-elevated p-6">
         <h3 className="text-lg font-semibold mb-6">Hiring Pipeline Breakdown</h3>
-
-        {pipelineStages.map((stage) => (
-          <div key={stage.key} className="flex justify-between">
-            <span>{stage.label}</span>
-            <span>{pipeline[stage.key]}</span>
-          </div>
-        ))}
+        <ChartContainer config={deptChartConfig} className="h-80">
+          <BarChart
+            data={pipelineStages.map(stage => ({
+              stage: stage.label,
+              count: pipeline[stage.key],
+              color: stage.color
+            }))}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="stage" />
+            <YAxis />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+              {pipelineStages.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${(index % 5) + 1}))`} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartContainer>
       </motion.div>
 
       <motion.div className="card-elevated p-6 text-center">
         <h3 className="text-lg font-semibold mb-4">Success Rate</h3>
-        <p className="text-3xl font-bold">{successRate}%</p>
+        <div className="relative w-32 h-32 mx-auto mb-4">
+          <PieChart width={128} height={128}>
+            <Pie
+              data={[
+                { name: 'Success', value: Math.min(successRate, 100), fill: 'hsl(var(--primary))' },
+                { name: 'Remaining', value: Math.max(100 - successRate, 0), fill: 'hsl(var(--muted))' }
+              ]}
+              cx={64}
+              cy={64}
+              innerRadius={40}
+              outerRadius={60}
+              startAngle={90}
+              endAngle={450}
+              dataKey="value"
+            />
+          </PieChart>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{successRate}%</p>
+              <p className="text-xs text-muted-foreground">Success</p>
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
 

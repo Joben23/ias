@@ -3,6 +3,7 @@ import { jobPostings as initialJobPostings, applicants, type JobPosting } from '
 import { motion } from 'framer-motion';
 import { Briefcase, Users, Calendar, MapPin, Clock, Plus, ChevronRight, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
 import NewJobPostingDialog from '@/components/hr/NewJobPostingDialog';
+import { ApplicantDetailDialog } from '@/components/hr/ApplicantDetailDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 const statusConfig = {
@@ -14,6 +15,10 @@ const statusConfig = {
 export default function RecruitmentPage() {
   const [jobs, setJobs] = useState<JobPosting[]>(initialJobPostings);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null);
+  const [jobDetailOpen, setJobDetailOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const interviewApplicants = applicants.filter(a => a.status === 'Interview Scheduled');
 
   useEffect(() => {
@@ -37,8 +42,7 @@ export default function RecruitmentPage() {
           status: row.status as JobPosting['status'],
         }));
         const dbIds = new Set(mapped.map(j => j.id));
-        const kept = initialJobPostings.filter(j => !dbIds.has(j.id));
-        setJobs([...mapped, ...kept]);
+        setJobs(mapped);
       }
     };
     fetchJobs();
@@ -63,6 +67,16 @@ export default function RecruitmentPage() {
     } else {
       setJobs(prev => [job, ...prev]);
     }
+  };
+
+  const handleJobClick = (job: JobPosting) => {
+    setSelectedJob(job);
+    setJobDetailOpen(true);
+  };
+
+  const handleInterviewClick = (applicant: any) => {
+    setSelectedApplicant(applicant);
+    setDetailOpen(true);
   };
 
   return (
@@ -94,7 +108,7 @@ export default function RecruitmentPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.08 }}
-              className={`${step.color} rounded-xl p-4 text-center text-primary-foreground`}
+              className={`gradient-success dark:${step.color} rounded-xl p-4 text-center text-primary-foreground`}
             >
               <p className="text-2xl font-display font-bold">{step.count}</p>
               <p className="text-xs opacity-90 mt-1">{step.label}</p>
@@ -117,6 +131,7 @@ export default function RecruitmentPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 className="card-elevated p-5 hover:border-primary/30 transition-all cursor-pointer group"
+                onClick={() => handleJobClick(job)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className={`${config.bg} p-2 rounded-lg`}>
@@ -150,6 +165,46 @@ export default function RecruitmentPage() {
         </div>
       </div>
 
+      {/* Job Details */}
+      {selectedJob && jobDetailOpen && (
+        <div className="card-elevated p-5">
+          <h3 className="font-display font-semibold text-foreground mb-4">Job Details: {selectedJob.title}</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-foreground">Description</h4>
+              <p className="text-muted-foreground">{selectedJob.description}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-foreground">Requirements</h4>
+              <ul className="list-disc list-inside text-muted-foreground">
+                {selectedJob.requirements.map(req => <li key={req}>{req}</li>)}
+              </ul>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-foreground">Department:</span> {selectedJob.department}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Position:</span> {selectedJob.position}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Employment Type:</span> {selectedJob.employmentType}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Applicants:</span> {selectedJob.applicantCount}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Posted:</span> {selectedJob.postedDate}
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Closes:</span> {selectedJob.closingDate}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setJobDetailOpen(false)} className="mt-4 px-4 py-2 bg-muted rounded-lg text-muted-foreground hover:bg-muted/80">Close</button>
+        </div>
+      )}
+
       {/* Interview Schedule */}
       <div>
         <h2 className="text-lg font-display font-semibold text-foreground mb-4">Upcoming Interviews</h2>
@@ -162,7 +217,8 @@ export default function RecruitmentPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors"
+                className="p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => handleInterviewClick(app)}
               >
                 <div className="gradient-cool w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-display font-bold text-sm shrink-0">
                   {initials}
@@ -184,6 +240,14 @@ export default function RecruitmentPage() {
           )}
         </div>
       </div>
+
+      <ApplicantDetailDialog
+        applicant={selectedApplicant}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onStatusChange={() => {}}
+        onHire={() => {}}
+      />
 
       <NewJobPostingDialog open={dialogOpen} onOpenChange={setDialogOpen} onAdd={handleAddJob} />
     </div>

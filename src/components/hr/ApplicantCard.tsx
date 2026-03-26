@@ -46,7 +46,7 @@ export function ApplicantCard({ applicant, index = 0 }: ApplicantCardProps) {
           <p className="text-sm text-muted-foreground mt-0.5">{applicant.positionApplied} · {applicant.department}</p>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5 text-black dark:text-white" />
               {applicant.experience}
             </span>
             {applicant.rating && (

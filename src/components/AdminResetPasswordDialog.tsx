@@ -102,31 +102,63 @@ export function AdminResetPasswordDialog({
   const handlePasswordResetEmail = async () => {
     setLoading(true);
     try {
-      // Send password reset email
-      const { error } = await supabase.auth.resetPasswordForEmail(employeeEmail, {
-        redirectTo: `${window.location.origin}/`,
+      // Send email directly via Edge Function
+      const { error } = await supabase.functions.invoke('resend-send-email', {
+        body: {
+          to: employeeEmail,
+          subject: 'Reset Your Password - HRMS System',
+          html: `
+            <html>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background: #f4f4f4; padding: 20px;">
+                <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center;">
+                    <h1 style="margin: 0;">Reset Your Password</h1>
+                  </div>
+                  <div style="padding: 40px;">
+                    <p>Hello ${employeeName},</p>
+                    <p>An administrator has requested a password reset for your account. Click the link below to set a new password:</p>
+                    <p style="margin-top: 30px;">
+                      <a href="${window.location.origin}/auth/change-password" 
+                         style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                        Reset Password
+                      </a>
+                    </p>
+                    <p style="font-size: 12px; color: #999; margin-top: 30px;">This link expires in 24 hours. If you need assistance, contact your administrator.</p>
+                  </div>
+                  <div style="background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd;">
+                    <p>HR Management System | Password Reset</p>
+                  </div>
+                </div>
+              </body>
+            </html>
+          `,
+          from: 'team@hrmsystem.com',
+        },
       });
 
       if (error) {
         toast({
           title: 'Error',
-          description: error.message,
+          description: 'Failed to send password reset email',
           variant: 'destructive',
         });
-      } else {
-        // Mark user as must change password
-        await supabase
-          .from('profiles')
-          .update({ must_change_password: true } as any)
-          .eq('id', employeeId);
-
-        toast({
-          title: 'Success',
-          description: `Password reset email sent to ${employeeEmail}. Employee must change password on next login.`,
-        });
-
-        setOpen(false);
+        setLoading(false);
+        return;
       }
+
+      // Mark user as must change password
+      await supabase
+        .from('profiles')
+        .update({ must_change_password: true } as any)
+        .eq('id', employeeId);
+
+      toast({
+        title: 'Success',
+        description: `Password reset email sent to ${employeeEmail}. Employee must change password on next login.`,
+      });
+
+      setLoading(false);
+      setOpen(false);
     } catch (error) {
       console.error('Error sending reset email:', error);
       toast({
@@ -134,7 +166,6 @@ export function AdminResetPasswordDialog({
         description: 'Failed to send password reset email',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };

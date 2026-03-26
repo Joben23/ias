@@ -96,8 +96,8 @@ export default function InterviewsPage() {
             </div>
             <p className="text-xs text-muted-foreground">{interview.applicant_position}</p>
             <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {interview.interview_date}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {interview.interview_time}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-black dark:text-white" /> {interview.interview_date}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-black dark:text-white" /> {interview.interview_time}</span>
               {interview.interview_type === 'Online' ? (
                 <span className="flex items-center gap-1"><Video className="w-3 h-3" /> Online</span>
               ) : (
