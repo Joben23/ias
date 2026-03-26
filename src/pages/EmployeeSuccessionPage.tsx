@@ -4,7 +4,6 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 
 interface Employee {
@@ -19,19 +18,16 @@ interface SuccessionOpportunity {
   key_position_id: string;
   position_name: string;
   department: string;
-  readiness_score: number;
-  readiness_level: 'Ready Now' | 'Ready Soon' | 'Needs Development';
-  succession_order: number;
-  gap_analysis: string;
+  readiness_level: 'Ready Now' | 'Ready Soon' | 'In Development';
+  notes: string;
 }
 
 interface DevelopmentPlan {
   id: string;
-  planned_trainings: string[];
-  required_competencies: string[];
-  target_completion_date: string;
+  title: string;
+  description: string;
+  target_date: string;
   status: 'Active' | 'Completed' | 'On Hold';
-  notes: string;
 }
 
 interface EmployeeMetrics {
@@ -85,11 +81,9 @@ export function EmployeeSuccessionPage() {
         .select(
           `
           key_position_id,
-          readiness_score,
           readiness_level,
-          succession_order,
-          gap_analysis,
-          key_positions:key_position_id(name, department)
+          notes,
+          key_positions:key_position_id(position_name, department)
         `
         )
         .eq('employee_id', employeeId);
@@ -98,28 +92,22 @@ export function EmployeeSuccessionPage() {
 
       const formattedOpportunities = ((oppData || []) as unknown as any[]).map((opp) => ({
         key_position_id: opp.key_position_id,
-        position_name: opp.key_positions?.name || 'Unknown Position',
+        position_name: opp.key_positions?.position_name || 'Unknown Position',
         department: opp.key_positions?.department || 'Unknown Department',
-        readiness_score: opp.readiness_score,
         readiness_level: opp.readiness_level,
-        succession_order: opp.succession_order,
-        gap_analysis: opp.gap_analysis,
+        notes: opp.notes,
       }));
 
       setOpportunities(formattedOpportunities);
 
-      // Fetch development plans for this employee's opportunities
-      const candidateIds = ((oppData || []) as unknown as any[]).map((opp) => opp.id);
+      // Fetch development plans for this employee
+      const { data: planData, error: planError } = await supabase
+        .from('development_plans' as any)
+        .select('*')
+        .eq('employee_id', employeeId);
 
-      if (candidateIds.length > 0) {
-        const { data: planData, error: planError } = await supabase
-          .from('succession_development_plans' as any)
-          .select('*')
-          .in('succession_candidate_id', candidateIds);
-
-        if (planError) throw planError;
-        setDevelopmentPlans((planData as unknown as DevelopmentPlan[]) || []);
-      }
+      if (planError) throw planError;
+      setDevelopmentPlans((planData as unknown as DevelopmentPlan[]) || []);
 
       // Calculate metrics
       const readyNow = formattedOpportunities.filter((o) => o.readiness_level === 'Ready Now').length;
@@ -127,7 +115,7 @@ export function EmployeeSuccessionPage() {
         (o) => o.readiness_level === 'Ready Soon'
       ).length;
       const inDevelopment = formattedOpportunities.filter(
-        (o) => o.readiness_level === 'Needs Development'
+        (o) => o.readiness_level === 'In Development'
       ).length;
 
       const activePlans = ((planData || []) as any[]).filter((p) => p.status === 'Active').length;
@@ -159,7 +147,7 @@ export function EmployeeSuccessionPage() {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'Ready Soon':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Needs Development':
+      case 'In Development':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -172,7 +160,7 @@ export function EmployeeSuccessionPage() {
         return <CheckCircle className="h-4 w-4" />;
       case 'Ready Soon':
         return <Clock className="h-4 w-4" />;
-      case 'Needs Development':
+      case 'In Development':
         return <Zap className="h-4 w-4" />;
       default:
         return null;
@@ -294,26 +282,15 @@ export function EmployeeSuccessionPage() {
                         {getReadinessIcon(opp.readiness_level)}
                         <h3 className="font-semibold text-gray-900">{opp.position_name}</h3>
                         <span className="text-xs text-gray-600">({opp.department})</span>
-                        {opp.succession_order && (
-                          <Badge variant="outline" className="ml-auto">
-                            Position #{opp.succession_order}
-                          </Badge>
-                        )}
                       </div>
                       <p className="text-sm text-gray-700 mb-3">{opp.readiness_level}</p>
 
-                      {opp.gap_analysis && (
-                        <div className="bg-white bg-opacity-50 p-2 rounded text-sm text-gray-700 mb-3">
-                          <p className="font-medium mb-1">Gap Analysis:</p>
-                          <p>{opp.gap_analysis}</p>
+                      {opp.notes && (
+                        <div className="bg-white bg-opacity-50 p-2 rounded text-sm text-gray-700">
+                          <p className="font-medium mb-1">Notes:</p>
+                          <p>{opp.notes}</p>
                         </div>
                       )}
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Readiness</span>
-                        <span className="text-sm font-bold">{opp.readiness_score}%</span>
-                      </div>
-                      <Progress value={opp.readiness_score} className="mt-2 h-2" />
                     </div>
                   </div>
                 </CardContent>
@@ -357,49 +334,22 @@ export function EmployeeSuccessionPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {plan.planned_trainings && plan.planned_trainings.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Title</p>
+                    <p className="text-sm text-gray-900">{plan.title}</p>
+                  </div>
+
+                  {plan.description && (
                     <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">Planned Trainings</p>
-                      <ul className="space-y-1">
-                        {plan.planned_trainings.map((training, idx) => (
-                          <li key={idx} className="text-sm text-gray-600 flex gap-2">
-                            <span>✓</span>
-                            <span>{training}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{plan.description}</p>
                     </div>
                   )}
 
-                  {plan.required_competencies && plan.required_competencies.length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">
-                        Required Competencies
-                      </p>
-                      <ul className="space-y-1">
-                        {plan.required_competencies.map((comp, idx) => (
-                          <li key={idx} className="text-sm text-gray-600 flex gap-2">
-                            <span>→</span>
-                            <span>{comp}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {plan.target_completion_date && (
+                  {plan.target_date && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <span className="font-medium">Target Completion:</span>
-                      <span>{new Date(plan.target_completion_date).toLocaleDateString()}</span>
-                    </div>
-                  )}
-
-                  {plan.notes && (
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-1">Notes</p>
-                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                        {plan.notes}
-                      </p>
+                      <span className="font-medium">Target Date:</span>
+                      <span>{new Date(plan.target_date).toLocaleDateString()}</span>
                     </div>
                   )}
                 </CardContent>

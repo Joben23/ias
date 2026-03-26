@@ -28,19 +28,16 @@ import {
 
 interface KeyPosition {
   id: string;
-  name: string;
+  position_name: string;
   department: string;
-  description: string;
   is_critical: boolean;
-  current_holder_id: string;
-  required_competencies?: string[];
   created_at?: string;
+  updated_at?: string;
 }
 
 interface EditFormData {
-  name: string;
+  position_name: string;
   department: string;
-  description: string;
   is_critical: boolean;
 }
 
@@ -53,9 +50,8 @@ export function KeyPositionsPage() {
   const [positionToDelete, setPositionToDelete] = useState<KeyPosition | null>(null);
   const [editingPosition, setEditingPosition] = useState<KeyPosition | null>(null);
   const [formData, setFormData] = useState<EditFormData>({
-    name: '',
+    position_name: '',
     department: '',
-    description: '',
     is_critical: false,
   });
   const { toast } = useToast();
@@ -86,7 +82,7 @@ export function KeyPositionsPage() {
 
   const handleCreatePosition = async () => {
     try {
-      if (!formData.name.trim() || !formData.department.trim()) {
+      if (!formData.position_name.trim() || !formData.department.trim()) {
         toast({
           title: 'Validation Error',
           description: 'Please fill in all required fields',
@@ -97,9 +93,8 @@ export function KeyPositionsPage() {
 
       const { error } = await supabase.from('key_positions' as any).insert([
         {
-          name: formData.name,
+          position_name: formData.position_name,
           department: formData.department,
-          description: formData.description,
           is_critical: formData.is_critical,
         },
       ]);
@@ -111,7 +106,7 @@ export function KeyPositionsPage() {
         description: 'Key position created successfully',
       });
 
-      setFormData({ name: '', department: '', description: '', is_critical: false });
+      setFormData({ position_name: '', department: '', is_critical: false });
       setIsCreateDialogOpen(false);
       fetchPositions();
     } catch (error) {
@@ -128,7 +123,7 @@ export function KeyPositionsPage() {
     if (!editingPosition) return;
 
     try {
-      if (!formData.name.trim() || !formData.department.trim()) {
+      if (!formData.position_name.trim() || !formData.department.trim()) {
         toast({
           title: 'Validation Error',
           description: 'Please fill in all required fields',
@@ -140,9 +135,8 @@ export function KeyPositionsPage() {
       const { error } = await supabase
         .from('key_positions' as any)
         .update({
-          name: formData.name,
+          position_name: formData.position_name,
           department: formData.department,
-          description: formData.description,
           is_critical: formData.is_critical,
         })
         .eq('id', editingPosition.id);
@@ -154,7 +148,7 @@ export function KeyPositionsPage() {
         description: 'Key position updated successfully',
       });
 
-      setFormData({ name: '', department: '', description: '', is_critical: false });
+      setFormData({ position_name: '', department: '', is_critical: false });
       setEditingPosition(null);
       setIsEditDialogOpen(false);
       fetchPositions();
@@ -209,7 +203,7 @@ export function KeyPositionsPage() {
 
   const filteredPositions = positions.filter(
     (pos) =>
-      pos.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pos.position_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pos.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -244,12 +238,12 @@ export function KeyPositionsPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Position Name *</Label>
+                <Label htmlFor="position_name">Position Name *</Label>
                 <Input
-                  id="name"
+                  id="position_name"
                   placeholder="e.g., Chief Medical Officer"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.position_name}
+                  onChange={(e) => setFormData({ ...formData, position_name: e.target.value })}
                 />
               </div>
               <div>
@@ -259,16 +253,6 @@ export function KeyPositionsPage() {
                   placeholder="e.g., Clinical Operations"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Role responsibilities and expectations..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -328,7 +312,7 @@ export function KeyPositionsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <CardTitle className={position.is_critical ? 'text-red-900' : ''}>
-                      {position.name}
+                      {position.position_name}
                     </CardTitle>
                     <CardDescription>{position.department}</CardDescription>
                   </div>
@@ -340,7 +324,6 @@ export function KeyPositionsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 mb-4">{position.description}</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -376,11 +359,11 @@ export function KeyPositionsPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="edit-name">Position Name *</Label>
+              <Label htmlFor="edit-position_name">Position Name *</Label>
               <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="edit-position_name"
+                value={formData.position_name}
+                onChange={(e) => setFormData({ ...formData, position_name: e.target.value })}
               />
             </div>
             <div>
@@ -389,15 +372,6 @@ export function KeyPositionsPage() {
                 id="edit-department"
                 value={formData.department}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
               />
             </div>
             <div className="flex items-center space-x-2">

@@ -9,21 +9,17 @@ import { Button } from '@/components/ui/button';
 
 interface KeyPosition {
   id: string;
-  name: string;
+  position_name: string;
   department: string;
-  description: string;
   is_critical: boolean;
-  current_holder_id: string;
 }
 
 interface SuccessionCandidate {
   id: string;
   employee_id: string;
   key_position_id: string;
-  readiness_level: 'Ready Now' | 'Ready Soon' | 'Needs Development';
-  readiness_score: number;
-  succession_order: number;
-  gap_analysis: string;
+  readiness_level: 'Ready Now' | 'Ready Soon' | 'In Development';
+  notes: string;
 }
 
 interface DashboardStats {
@@ -35,15 +31,6 @@ interface DashboardStats {
   positionsWithoutSuccessors: number;
 }
 
-interface CriticalPositionWithoutSuccessor {
-  position_id: string;
-  position_name: string;
-  department: string;
-  current_holder: string;
-  successor_count: number;
-  ready_now_count: number;
-}
-
 export function SuccessionPlanningDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalKeyPositions: 0,
@@ -53,7 +40,6 @@ export function SuccessionPlanningDashboard() {
     needsDevelopmentCount: 0,
     positionsWithoutSuccessors: 0,
   });
-  const [criticalGaps, setCriticalGaps] = useState<CriticalPositionWithoutSuccessor[]>([]);
   const [talentPool, setTalentPool] = useState<SuccessionCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -96,37 +82,30 @@ export function SuccessionPlanningDashboard() {
         
         const readyNow = candidates.filter((c) => c.readiness_level === 'Ready Now').length;
         const readySoon = candidates.filter((c) => c.readiness_level === 'Ready Soon').length;
-        const needsDev = candidates.filter((c) => c.readiness_level === 'Needs Development').length;
+        const inDevelopment = candidates.filter((c) => c.readiness_level === 'In Development').length;
 
         setStats((prev) => ({
           ...prev,
           readyNowCount: readyNow,
           readySoonCount: readySoon,
-          needsDevelopmentCount: needsDev,
+          needsDevelopmentCount: inDevelopment,
         }));
 
         setTalentPool(candidates);
       }
 
-      // Fetch critical positions without successors
-      try {
-        const { data: gapData, error: gapError } = await supabase.rpc(
-          'get_critical_positions_without_successors'
-        );
+      // Calculate positions without successors
+      if (positionsData && candidatesData) {
+        const positions = (positionsData as unknown as KeyPosition[]) || [];
+        const candidates = (candidatesData as unknown as SuccessionCandidate[]) || [];
+        
+        const positionsWithCandidates = new Set(candidates.map(c => c.key_position_id));
+        const positionsWithoutSuccessors = positions.filter(p => !positionsWithCandidates.has(p.id)).length;
 
-        if (gapError) {
-          console.error('Error fetching critical gaps:', gapError);
-        } else {
-          const gaps = (gapData as unknown as CriticalPositionWithoutSuccessor[]) || [];
-          setCriticalGaps(gaps);
-
-          setStats((prev) => ({
-            ...prev,
-            positionsWithoutSuccessors: gaps.length,
-          }));
-        }
-      } catch (error) {
-        console.error('Error calling critical gaps function:', error);
+        setStats((prev) => ({
+          ...prev,
+          positionsWithoutSuccessors,
+        }));
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -146,7 +125,7 @@ export function SuccessionPlanningDashboard() {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'Ready Soon':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Needs Development':
+      case 'In Development':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -159,7 +138,7 @@ export function SuccessionPlanningDashboard() {
         return <CheckCircle className="h-4 w-4" />;
       case 'Ready Soon':
         return <Clock className="h-4 w-4" />;
-      case 'Needs Development':
+      case 'In Development':
         return <Zap className="h-4 w-4" />;
       default:
         return null;
@@ -242,42 +221,6 @@ export function SuccessionPlanningDashboard() {
         </Card>
       </div>
 
-      {/* Critical Gaps Alert */}
-      {criticalGaps.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-900 flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Critical Succession Gaps
-            </CardTitle>
-            <CardDescription className="text-red-800">
-              {criticalGaps.length} critical position(s) without ready successors
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {criticalGaps.map((gap) => (
-              <div
-                key={gap.position_id}
-                className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-100"
-              >
-                <div>
-                  <p className="font-medium text-gray-900">{gap.position_name}</p>
-                  <p className="text-sm text-gray-600">
-                    {gap.department} • Current: {gap.current_holder}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-red-700">
-                    {gap.successor_count} candidate(s)
-                  </p>
-                  <p className="text-xs text-red-600">{gap.ready_now_count} ready now</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
       {/* Talent Pool Overview */}
       <Card>
         <CardHeader>
@@ -292,28 +235,39 @@ export function SuccessionPlanningDashboard() {
             {talentPool.length === 0 ? (
               <p className="text-gray-500 py-4">No succession candidates assigned yet</p>
             ) : (
-              <div className="space-y-3">
-                {talentPool.map((candidate) => (
-                  <div key={candidate.id} className={`p-3 rounded-lg border-2 ${getReadinessColor(candidate.readiness_level)}`}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {getReadinessIcon(candidate.readiness_level)}
-                          <span className="font-medium text-gray-900">
-                            Position #{candidate.succession_order}
-                          </span>
-                        </div>
-                        {candidate.gap_analysis && (
-                          <p className="text-sm mt-1 text-gray-700">{candidate.gap_analysis}</p>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-2xl font-bold">{candidate.readiness_score}%</div>
-                        <Progress value={candidate.readiness_score} className="mt-2 w-24" />
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="font-medium text-green-900">Ready Now</span>
                   </div>
-                ))}
+                  <div className="text-2xl font-bold text-green-700">
+                    {stats.readyNowCount}
+                  </div>
+                  <p className="text-sm text-green-600">candidates ready to step in</p>
+                </div>
+
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-5 w-5 text-yellow-600" />
+                    <span className="font-medium text-yellow-900">Ready Soon</span>
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-700">
+                    {stats.readySoonCount}
+                  </div>
+                  <p className="text-sm text-yellow-600">candidates in development</p>
+                </div>
+
+                <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-5 w-5 text-orange-600" />
+                    <span className="font-medium text-orange-900">In Development</span>
+                  </div>
+                  <div className="text-2xl font-bold text-orange-700">
+                    {stats.needsDevelopmentCount}
+                  </div>
+                  <p className="text-sm text-orange-600">candidates need training</p>
+                </div>
               </div>
             )}
           </div>

@@ -502,10 +502,6 @@ export default function PerformancePage() {
               </motion.div>
             ))}
           </div>
-        ) : (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground">No employees found matching your filters</p>
-          </Card>
         )}
       </motion.div>
 

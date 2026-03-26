@@ -34,7 +34,7 @@ import { Progress } from '@/components/ui/progress';
 
 interface KeyPosition {
   id: string;
-  name: string;
+  position_name: string;
   department: string;
 }
 
@@ -49,10 +49,8 @@ interface SuccessionCandidate {
   id: string;
   employee_id: string;
   key_position_id: string;
-  readiness_level: 'Ready Now' | 'Ready Soon' | 'Needs Development';
-  readiness_score: number;
-  succession_order: number;
-  gap_analysis: string;
+  readiness_level: 'Ready Now' | 'Ready Soon' | 'In Development';
+  notes: string;
   employee?: Employee;
   key_position?: KeyPosition;
 }
@@ -60,7 +58,8 @@ interface SuccessionCandidate {
 interface FormData {
   employee_id: string;
   key_position_id: string;
-  succession_order: number;
+  readiness_level: 'Ready Now' | 'Ready Soon' | 'In Development';
+  notes: string;
 }
 
 export function SuccessionCandidatesPage() {
@@ -77,7 +76,8 @@ export function SuccessionCandidatesPage() {
   const [formData, setFormData] = useState<FormData>({
     employee_id: '',
     key_position_id: '',
-    succession_order: 1,
+    readiness_level: 'In Development',
+    notes: '',
   });
   const { toast } = useToast();
 
@@ -109,7 +109,7 @@ export function SuccessionCandidatesPage() {
           `
           *,
           employees:employee_id(id, full_name, email, department),
-          key_positions:key_position_id(id, name, department)
+          key_positions:key_position_id(id, position_name, department)
         `
         );
       if (candError) throw candError;
@@ -157,27 +157,12 @@ export function SuccessionCandidatesPage() {
         return;
       }
 
-      // Calculate readiness score
-      let readinessScore = 0;
-      try {
-        const { data, error } = await supabase.rpc('calculate_succession_readiness', {
-          p_employee_id: formData.employee_id,
-          p_position_id: formData.key_position_id,
-        });
-
-        if (!error && data) {
-          readinessScore = data.readiness_score || 0;
-        }
-      } catch (e) {
-        console.error('Error calculating readiness:', e);
-      }
-
       const { error } = await supabase.from('succession_candidates' as any).insert([
         {
           employee_id: formData.employee_id,
           key_position_id: formData.key_position_id,
-          succession_order: formData.succession_order,
-          readiness_score: readinessScore,
+          readiness_level: formData.readiness_level,
+          notes: formData.notes,
         },
       ]);
 
@@ -188,7 +173,7 @@ export function SuccessionCandidatesPage() {
         description: 'Succession candidate added successfully',
       });
 
-      setFormData({ employee_id: '', key_position_id: '', succession_order: 1 });
+      setFormData({ employee_id: '', key_position_id: '', readiness_level: 'In Development', notes: '' });
       setIsCreateDialogOpen(false);
       fetchData();
     } catch (error) {
@@ -308,11 +293,24 @@ export function SuccessionCandidatesPage() {
   const getReadinessColor = (level: string) => {
     switch (level) {
       case 'Ready Now':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'border-green-200 bg-green-50';
       case 'Ready Soon':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Needs Development':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'border-yellow-200 bg-yellow-50';
+      case 'In Development':
+        return 'border-orange-200 bg-orange-50';
+      default:
+        return 'border-gray-200 bg-gray-50';
+    }
+  };
+
+  const getReadinessBadgeColor = (level: string) => {
+    switch (level) {
+      case 'Ready Now':
+        return 'bg-green-100 text-green-800';
+      case 'Ready Soon':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'In Development':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -321,7 +319,7 @@ export function SuccessionCandidatesPage() {
   const filteredCandidates = candidates.filter((candidate) => {
     const matchesSearch =
       candidate.employee?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.key_position?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      candidate.key_position?.position_name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter = !filterPosition || candidate.key_position_id === filterPosition;
 
@@ -384,7 +382,7 @@ export function SuccessionCandidatesPage() {
                   <SelectContent>
                     {positions.map((pos) => (
                       <SelectItem key={pos.id} value={pos.id}>
-                        {pos.name}
+                        {pos.position_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -408,15 +406,28 @@ export function SuccessionCandidatesPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="order">Succession Order</Label>
-                <Input
-                  id="order"
-                  type="number"
-                  min="1"
-                  value={formData.succession_order}
-                  onChange={(e) =>
-                    setFormData({ ...formData, succession_order: parseInt(e.target.value) || 1 })
-                  }
+                <Label htmlFor="readiness">Readiness Level</Label>
+                <Select value={formData.readiness_level} onValueChange={(value: 'Ready Now' | 'Ready Soon' | 'In Development') =>
+                  setFormData({ ...formData, readiness_level: value })
+                }>
+                  <SelectTrigger id="readiness">
+                    <SelectValue placeholder="Select readiness level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Ready Now">Ready Now</SelectItem>
+                    <SelectItem value="Ready Soon">Ready Soon</SelectItem>
+                    <SelectItem value="In Development">In Development</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Additional notes about this candidate..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
                 />
               </div>
               <Button onClick={handleCreateCandidate} className="w-full">
@@ -482,7 +493,7 @@ export function SuccessionCandidatesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {posCandidates.map((candidate, idx) => (
+                {posCandidates.map((candidate) => (
                   <div
                     key={candidate.id}
                     className={`p-4 rounded-lg border-2 ${getReadinessColor(candidate.readiness_level)}`}
@@ -490,63 +501,37 @@ export function SuccessionCandidatesPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-block w-6 h-6 bg-gray-200 text-gray-700 rounded-full text-center text-xs font-bold">
-                            {idx + 1}
-                          </span>
                           <p className="font-medium text-gray-900">{candidate.employee?.full_name}</p>
                           <span className="text-xs text-gray-600">({candidate.employee?.department})</span>
                         </div>
-                        <div className="mt-2 space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-700">{candidate.readiness_level}</span>
-                            <span className="font-medium">{candidate.readiness_score}%</span>
-                          </div>
-                          <Progress value={candidate.readiness_score} className="h-2" />
+                        <div className="mt-2">
+                          <Badge variant="secondary" className={getReadinessBadgeColor(candidate.readiness_level)}>
+                            {candidate.readiness_level}
+                          </Badge>
                         </div>
-                        {candidate.gap_analysis && (
-                          <p className="text-xs text-gray-700 mt-2">{candidate.gap_analysis}</p>
+                        {candidate.notes && (
+                          <p className="text-sm text-gray-700 mt-2">{candidate.notes}</p>
                         )}
                       </div>
-                      <div className="flex flex-col gap-1 shrink-0">
+                      <div className="flex gap-2 shrink-0">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          disabled={idx === 0}
-                          onClick={() => handleReorderCandidate(candidate, 'up')}
-                          className="h-8 w-8 p-0"
+                          onClick={() => openEditDialog(candidate)}
                         >
-                          <ChevronUp className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Edit
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          disabled={idx === posCandidates.length - 1}
-                          onClick={() => handleReorderCandidate(candidate, 'down')}
-                          className="h-8 w-8 p-0"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => setCandidateToDelete(candidate)}
                         >
-                          <ChevronDown className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
                         </Button>
                       </div>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => openEditDialog(candidate)}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 flex-1"
-                        onClick={() => setCandidateToDelete(candidate)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Remove
-                      </Button>
                     </div>
                   </div>
                 ))}

@@ -38,30 +38,27 @@ interface SuccessionCandidate {
   id: string;
   employee_id: string;
   key_position_id: string;
-  readiness_level: 'Ready Now' | 'Ready Soon' | 'Needs Development';
-  readiness_score: number;
+  readiness_level: 'Ready Now' | 'Ready Soon' | 'In Development';
   employee?: { full_name: string; email: string };
-  key_position?: { name: string };
+  key_position?: { position_name: string };
 }
 
 interface DevelopmentPlan {
   id: string;
-  succession_candidate_id: string;
-  planned_trainings: string[];
-  required_competencies: string[];
-  target_completion_date: string;
+  employee_id: string;
+  title: string;
+  description: string;
+  target_date: string;
   status: 'Active' | 'Completed' | 'On Hold';
-  notes: string;
   created_at: string;
 }
 
 interface FormData {
-  succession_candidate_id: string;
-  planned_trainings: string;
-  required_competencies: string;
-  target_completion_date: string;
+  employee_id: string;
+  title: string;
+  description: string;
+  target_date: string;
   status: 'Active' | 'Completed' | 'On Hold';
-  notes: string;
 }
 
 export function DevelopmentPlansPage() {
@@ -75,12 +72,11 @@ export function DevelopmentPlansPage() {
   const [planToDelete, setPlanToDelete] = useState<DevelopmentPlan | null>(null);
   const [editingPlan, setEditingPlan] = useState<DevelopmentPlan | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    succession_candidate_id: '',
-    planned_trainings: '',
-    required_competencies: '',
-    target_completion_date: '',
+    employee_id: '',
+    title: '',
+    description: '',
+    target_date: '',
     status: 'Active',
-    notes: '',
   });
   const { toast } = useToast();
 
@@ -92,30 +88,26 @@ export function DevelopmentPlansPage() {
     try {
       setLoading(true);
 
-      // Fetch candidates who need development
-      const { data: candData, error: candError } = await supabase
-        .from('succession_candidates' as any)
-        .select(
-          `
-          *,
-          employees:employee_id(full_name, email),
-          key_positions:key_position_id(name)
-        `
-        )
-        .eq('readiness_level', 'Needs Development');
+      // Fetch all active employees
+      const { data: empData, error: empError } = await supabase
+        .from('employees' as any)
+        .select('id, full_name, email, department')
+        .eq('status', 'active');
 
-      if (candError) throw candError;
-      setCandidates(
-        ((candData || []) as unknown as any[]).map((c) => ({
-          ...c,
-          employee: c.employees,
-          key_position: c.key_positions,
-        }))
-      );
+      if (empError) throw empError;
+
+      setCandidates((empData || []).map((emp: any) => ({
+        id: emp.id,
+        employee_id: emp.id,
+        key_position_id: '', // Not needed for this page
+        readiness_level: 'In Development' as const,
+        employee: { full_name: emp.full_name, email: emp.email },
+        key_position: { position_name: '' },
+      })));
 
       // Fetch development plans
       const { data: planData, error: planError } = await supabase
-        .from('succession_development_plans' as any)
+        .from('development_plans' as any)
         .select('*');
 
       if (planError) throw planError;
@@ -134,47 +126,36 @@ export function DevelopmentPlansPage() {
 
   const handleCreatePlan = async () => {
     try {
-      if (!formData.succession_candidate_id) {
+      if (!formData.employee_id || !formData.title.trim()) {
         toast({
           title: 'Validation Error',
-          description: 'Please select a succession candidate',
+          description: 'Please select an employee and provide a title',
           variant: 'destructive',
         });
         return;
       }
 
-      // Check if plan exists
+      // Check if plan exists for this employee
       const existingPlan = plans.find(
-        (p) => p.succession_candidate_id === formData.succession_candidate_id
+        (p) => p.employee_id === formData.employee_id && p.title === formData.title
       );
 
       if (existingPlan) {
         toast({
           title: 'Duplicate Plan',
-          description: 'A development plan already exists for this candidate',
+          description: 'A development plan with this title already exists for this employee',
           variant: 'destructive',
         });
         return;
       }
 
-      const trainings = formData.planned_trainings
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
-      const competencies = formData.required_competencies
-        .split(',')
-        .map((c) => c.trim())
-        .filter((c) => c.length > 0);
-
-      const { error } = await supabase.from('succession_development_plans' as any).insert([
+      const { error } = await supabase.from('development_plans' as any).insert([
         {
-          succession_candidate_id: formData.succession_candidate_id,
-          planned_trainings: trainings,
-          required_competencies: competencies,
-          target_completion_date: formData.target_completion_date,
+          employee_id: formData.employee_id,
+          title: formData.title,
+          description: formData.description,
+          target_date: formData.target_date,
           status: formData.status,
-          notes: formData.notes,
         },
       ]);
 
@@ -185,14 +166,7 @@ export function DevelopmentPlansPage() {
         description: 'Development plan created successfully',
       });
 
-      setFormData({
-        succession_candidate_id: '',
-        planned_trainings: '',
-        required_competencies: '',
-        target_completion_date: '',
-        status: 'Active',
-        notes: '',
-      });
+      setFormData({ employee_id: '', title: '', description: '', target_date: '', status: 'Active' });
       setIsCreateDialogOpen(false);
       fetchData();
     } catch (error) {
@@ -209,24 +183,13 @@ export function DevelopmentPlansPage() {
     if (!editingPlan) return;
 
     try {
-      const trainings = formData.planned_trainings
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
-      const competencies = formData.required_competencies
-        .split(',')
-        .map((c) => c.trim())
-        .filter((c) => c.length > 0);
-
       const { error } = await supabase
-        .from('succession_development_plans' as any)
+        .from('development_plans' as any)
         .update({
-          planned_trainings: trainings,
-          required_competencies: competencies,
-          target_completion_date: formData.target_completion_date,
+          title: formData.title,
+          description: formData.description,
+          target_date: formData.target_date,
           status: formData.status,
-          notes: formData.notes,
         })
         .eq('id', editingPlan.id);
 
@@ -255,7 +218,7 @@ export function DevelopmentPlansPage() {
 
     try {
       const { error } = await supabase
-        .from('succession_development_plans' as any)
+        .from('development_plans' as any)
         .delete()
         .eq('id', planToDelete.id);
 
@@ -281,12 +244,11 @@ export function DevelopmentPlansPage() {
   const openEditDialog = (plan: DevelopmentPlan) => {
     setEditingPlan(plan);
     setFormData({
-      succession_candidate_id: plan.succession_candidate_id,
-      planned_trainings: (plan.planned_trainings || []).join(', '),
-      required_competencies: (plan.required_competencies || []).join(', '),
-      target_completion_date: plan.target_completion_date,
+      employee_id: plan.employee_id,
+      title: plan.title,
+      description: plan.description,
+      target_date: plan.target_date,
       status: plan.status as 'Active' | 'Completed' | 'On Hold',
-      notes: plan.notes,
     });
     setIsEditDialogOpen(true);
   };
@@ -295,29 +257,27 @@ export function DevelopmentPlansPage() {
     switch (status) {
       case 'Active':
         return 'bg-blue-100 text-blue-800';
+      case 'On Hold':
+        return 'bg-yellow-100 text-yellow-800';
       case 'Completed':
         return 'bg-green-100 text-green-800';
-      case 'On Hold':
-        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getCandidateForPlan = (planId: string): SuccessionCandidate | undefined => {
-    const plan = plans.find((p) => p.id === planId);
-    if (!plan) return undefined;
-    return candidates.find((c) => c.id === plan.succession_candidate_id);
+  const getEmployeeForPlan = (plan: DevelopmentPlan) => {
+    return candidates.find((c) => c.employee_id === plan.employee_id);
   };
 
   const filteredPlans = plans.filter((plan) => {
-    const candidate = getCandidateForPlan(plan.id);
-    if (!candidate) return false;
+    const employee = getEmployeeForPlan(plan);
+    if (!employee) return false;
 
     const matchesSearch =
-      candidate.employee?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.key_position?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (plan.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
+      employee.employee?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plan.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter = !filterStatus || plan.status === filterStatus;
 
@@ -357,20 +317,20 @@ export function DevelopmentPlansPage() {
             </DialogHeader>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               <div>
-                <Label htmlFor="candidate">Succession Candidate *</Label>
+                <Label htmlFor="employee">Employee *</Label>
                 <Select
-                  value={formData.succession_candidate_id}
+                  value={formData.employee_id}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, succession_candidate_id: value })
+                    setFormData({ ...formData, employee_id: value })
                   }
                 >
-                  <SelectTrigger id="candidate">
-                    <SelectValue placeholder="Select candidate" />
+                  <SelectTrigger id="employee">
+                    <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                   <SelectContent>
                     {candidates.map((cand) => (
-                      <SelectItem key={cand.id} value={cand.id}>
-                        {cand.employee?.full_name} - {cand.key_position?.name}
+                      <SelectItem key={cand.id} value={cand.employee_id}>
+                        {cand.employee?.full_name} ({cand.employee?.email})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -378,77 +338,59 @@ export function DevelopmentPlansPage() {
               </div>
 
               <div>
-                <Label htmlFor="trainings">Planned Trainings (comma-separated)</Label>
-                <Textarea
-                  id="trainings"
-                  placeholder="e.g., Leadership 101, Financial Management, Strategic Planning"
-                  value={formData.planned_trainings}
-                  onChange={(e) =>
-                    setFormData({ ...formData, planned_trainings: e.target.value })
-                  }
-                  rows={2}
+                <Label htmlFor="title">Plan Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., Leadership Development Program"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
               <div>
-                <Label htmlFor="competencies">Required Competencies (comma-separated)</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
-                  id="competencies"
-                  placeholder="e.g., Budget Management, Team Leadership, Strategic Thinking"
-                  value={formData.required_competencies}
-                  onChange={(e) =>
-                    setFormData({ ...formData, required_competencies: e.target.value })
-                  }
-                  rows={2}
+                  id="description"
+                  placeholder="Detailed description of the development plan..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="date">Target Completion Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.target_completion_date}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        target_completion_date: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+              <div>
+                <Label htmlFor="target_date">Target Completion Date</Label>
+                <Input
+                  id="target_date"
+                  type="date"
+                  value={formData.target_date}
+                  onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value: any) =>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: 'Active' | 'Completed' | 'On Hold') =>
                     setFormData({ ...formData, status: value })
-                  }>
-                    <SelectTrigger id="status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="On Hold">On Hold</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Additional notes and observations..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={2}
-                />
+                  }
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="On Hold">On Hold</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Button onClick={handleCreatePlan} className="w-full">
                 Create Development Plan
+              </Button>
+            </div>
               </Button>
             </div>
           </DialogContent>
@@ -472,9 +414,9 @@ export function DevelopmentPlansPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All Plans</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Ongoing">Ongoing</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
-            <SelectItem value="On Hold">On Hold</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -497,8 +439,8 @@ export function DevelopmentPlansPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredPlans.map((plan) => {
-            const candidate = getCandidateForPlan(plan.id);
-            if (!candidate) return null;
+            const employee = getEmployeeForPlan(plan);
+            if (!employee) return null;
 
             return (
               <Card key={plan.id}>
@@ -509,10 +451,10 @@ export function DevelopmentPlansPage() {
                         {plan.status === 'Completed' && (
                           <CheckCircle2 className="h-5 w-5 text-green-600" />
                         )}
-                        {candidate.employee?.full_name}
+                        {plan.title}
                       </CardTitle>
                       <CardDescription>
-                        for {candidate.key_position?.name}
+                        for {employee.employee?.full_name}
                       </CardDescription>
                     </div>
                     <Badge className={`${getStatusColor(plan.status)}`}>
@@ -521,45 +463,17 @@ export function DevelopmentPlansPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {plan.planned_trainings && plan.planned_trainings.length > 0 && (
+                  {plan.description && (
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Planned Trainings</p>
-                      <div className="space-y-1">
-                        {plan.planned_trainings.map((training, idx) => (
-                          <div key={idx} className="text-sm text-gray-600">
-                            • {training}
-                          </div>
-                        ))}
-                      </div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Description</p>
+                      <p className="text-sm text-gray-600">{plan.description}</p>
                     </div>
                   )}
 
-                  {plan.required_competencies && plan.required_competencies.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">
-                        Required Competencies
-                      </p>
-                      <div className="space-y-1">
-                        {plan.required_competencies.map((comp, idx) => (
-                          <div key={idx} className="text-sm text-gray-600">
-                            • {comp}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {plan.target_completion_date && (
+                  {plan.target_date && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4" />
-                      <span>Target: {new Date(plan.target_completion_date).toLocaleDateString()}</span>
-                    </div>
-                  )}
-
-                  {plan.notes && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-1">Notes</p>
-                      <p className="text-sm text-gray-600">{plan.notes}</p>
+                      <span>Target: {new Date(plan.target_date).toLocaleDateString()}</span>
                     </div>
                   )}
 
@@ -599,47 +513,46 @@ export function DevelopmentPlansPage() {
           </DialogHeader>
           <div className="space-y-4 max-h-96 overflow-y-auto">
             <div>
-              <Label>Succession Candidate</Label>
+              <Label>Employee</Label>
               <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-                {editingPlan && getCandidateForPlan(editingPlan.id)?.employee?.full_name}
+                {editingPlan && getEmployeeForPlan(editingPlan)?.employee?.full_name}
               </div>
             </div>
 
             <div>
-              <Label htmlFor="edit-trainings">Planned Trainings (comma-separated)</Label>
-              <Textarea
-                id="edit-trainings"
-                value={formData.planned_trainings}
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData({ ...formData, planned_trainings: e.target.value })
+                  setFormData({ ...formData, title: e.target.value })
                 }
-                rows={2}
               />
             </div>
 
             <div>
-              <Label htmlFor="edit-competencies">Required Competencies (comma-separated)</Label>
+              <Label htmlFor="edit-description">Description</Label>
               <Textarea
-                id="edit-competencies"
-                value={formData.required_competencies}
+                id="edit-description"
+                value={formData.description}
                 onChange={(e) =>
-                  setFormData({ ...formData, required_competencies: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                 }
-                rows={2}
+                rows={3}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-date">Target Completion Date</Label>
+                <Label htmlFor="edit-date">Target Date</Label>
                 <Input
                   id="edit-date"
                   type="date"
-                  value={formData.target_completion_date}
+                  value={formData.target_date}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      target_completion_date: e.target.value,
+                      target_date: e.target.value,
                     })
                   }
                 />
@@ -661,10 +574,6 @@ export function DevelopmentPlansPage() {
                 </Select>
               </div>
             </div>
-
-            <div>
-              <Label htmlFor="edit-notes">Notes</Label>
-              <Textarea
                 id="edit-notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
