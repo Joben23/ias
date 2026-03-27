@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { dashboardStats, applicants, recognitions, newHires } from '@/data/sampleData';
 import { StatCard } from '@/components/hr/StatCard';
 import { HiringPipeline } from '@/components/hr/HiringPipeline';
@@ -7,10 +9,84 @@ import { RecognitionCard } from '@/components/hr/RecognitionCard';
 import { Users, Briefcase, UserCheck, UserPlus, Clock, Award, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 const Index = () => {
   const recentApplicants = applicants.slice(0, 4);
   const topRecognition = recognitions[0];
+  const [activeOpenings, setActiveOpenings] = useState<number>(dashboardStats.activeJobOpenings);
+  const [activeOpeningsList, setActiveOpeningsList] = useState<Array<{ id: string; title: string; department: string }>>([]);
+  const [selectedDashboardCard, setSelectedDashboardCard] = useState<'totalApplicants' | 'activeOpenings' | 'inInterview' | 'newHires' | 'underProbation' | 'recognitions' | null>(null);
+  const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchActiveOpenings = async () => {
+      const { data, error } = await supabase
+        .from('job_postings')
+        .select('id, title, department, status');
+
+      if (error) {
+        console.error('Failed to load job postings:', error);
+        return;
+      }
+
+      const openJobs = (data || []).filter((job: any) => job.status === 'Open');
+      setActiveOpenings(openJobs.length);
+      setActiveOpeningsList(openJobs.map((job: any) => ({ id: job.id, title: job.title, department: job.department })));
+    };
+
+    fetchActiveOpenings();
+  }, []);
+
+  const openDashboardModal = (key: typeof selectedDashboardCard) => {
+    setSelectedDashboardCard(key);
+    setIsDashboardModalOpen(true);
+  };
+
+  const dashboardModalData = () => {
+    if (!selectedDashboardCard) return { title: '', subtitle: '', lines: [] as string[] };
+
+    switch (selectedDashboardCard) {
+      case 'totalApplicants':
+        return {
+          title: 'Total Applicants',
+          subtitle: 'All active application submissions',
+          lines: applicants.slice(0, 10).map(a => `${a.fullName} • ${a.positionApplied}`),
+        };
+      case 'activeOpenings':
+        return {
+          title: 'Active Openings',
+          subtitle: 'Currently open jobs',
+          lines: activeOpeningsList.map(job => `${job.title} • ${job.department}`),
+        };
+      case 'inInterview':
+        return {
+          title: 'In Interview',
+          subtitle: 'Candidates currently interviewing',
+          lines: applicants.filter(a => a.status === 'Interview Scheduled').slice(0, 10).map(a => `${a.fullName} • ${a.positionApplied}`),
+        };
+      case 'newHires':
+        return {
+          title: 'New Hires',
+          subtitle: 'Hires in this month',
+          lines: newHires.slice(0, 10).map(h => `${h.name} • ${h.position}`),
+        };
+      case 'underProbation':
+        return {
+          title: 'Under Probation',
+          subtitle: 'Employees currently on probation',
+          lines: [] as string[],
+        };
+      case 'recognitions':
+        return {
+          title: 'Recognitions',
+          subtitle: 'Top recognitions this month',
+          lines: recognitions.slice(0, 10).map(r => `${r.employeeName} • ${r.awardType}`),
+        };
+      default:
+        return { title: '', subtitle: '', lines: [] as string[] };
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -24,12 +100,53 @@ const Index = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Applicants" value={dashboardStats.totalApplicants} icon={Users} delay={0} />
-        <StatCard title="Active Openings" value={dashboardStats.activeJobOpenings} icon={Briefcase} gradient="gradient-cool" delay={0.05} />
-        <StatCard title="In Interview" value={dashboardStats.candidatesInInterview} icon={UserCheck} gradient="gradient-warm" delay={0.1} />
-        <StatCard title="New Hires" value={dashboardStats.newHiresThisMonth} icon={UserPlus} delay={0.15} subtitle="This month" />
-        <StatCard title="Under Probation" value={dashboardStats.employeesUnderProbation} icon={Clock} gradient="gradient-cool" delay={0.2} />
-        <StatCard title="Recognitions" value={dashboardStats.recognitionHighlights} icon={Award} gradient="gradient-warm" delay={0.25} />
+        <StatCard
+          title="Total Applicants"
+          value={dashboardStats.totalApplicants}
+          icon={Users}
+          delay={0}
+          onClick={() => openDashboardModal('totalApplicants')}
+        />
+        <StatCard
+          title="Active Openings"
+          value={activeOpenings}
+          icon={Briefcase}
+          gradient="gradient-cool"
+          delay={0.05}
+          onClick={() => openDashboardModal('activeOpenings')}
+        />
+        <StatCard
+          title="In Interview"
+          value={dashboardStats.candidatesInInterview}
+          icon={UserCheck}
+          gradient="gradient-warm"
+          delay={0.1}
+          onClick={() => openDashboardModal('inInterview')}
+        />
+        <StatCard
+          title="New Hires"
+          value={dashboardStats.newHiresThisMonth}
+          icon={UserPlus}
+          delay={0.15}
+          subtitle="This month"
+          onClick={() => openDashboardModal('newHires')}
+        />
+        <StatCard
+          title="Under Probation"
+          value={dashboardStats.employeesUnderProbation}
+          icon={Clock}
+          gradient="gradient-cool"
+          delay={0.2}
+          onClick={() => openDashboardModal('underProbation')}
+        />
+        <StatCard
+          title="Recognitions"
+          value={dashboardStats.recognitionHighlights}
+          icon={Award}
+          gradient="gradient-warm"
+          delay={0.25}
+          onClick={() => openDashboardModal('recognitions')}
+        />
       </div>
 
       {/* Pipeline */}
@@ -102,6 +219,35 @@ const Index = () => {
           ))}
         </div>
       </motion.div>
+
+      <Dialog open={isDashboardModalOpen} onOpenChange={setIsDashboardModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dashboardModalData().title}</DialogTitle>
+            <DialogDescription>{dashboardModalData().subtitle}</DialogDescription>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <p className="text-5xl font-bold">
+              {selectedDashboardCard === 'totalApplicants' && dashboardStats.totalApplicants}
+              {selectedDashboardCard === 'activeOpenings' && activeOpenings}
+              {selectedDashboardCard === 'inInterview' && dashboardStats.candidatesInInterview}
+              {selectedDashboardCard === 'newHires' && dashboardStats.newHiresThisMonth}
+              {selectedDashboardCard === 'underProbation' && dashboardStats.employeesUnderProbation}
+              {selectedDashboardCard === 'recognitions' && dashboardStats.recognitionHighlights}
+            </p>
+          </div>
+          <div className="max-h-48 overflow-y-auto text-left text-sm p-2 space-y-1">
+            {dashboardModalData().lines.length === 0 ? (
+              <p className="text-muted-foreground">No details available for this metric.</p>
+            ) : (
+              dashboardModalData().lines.map((line, idx) => <p key={idx} className="truncate">{line}</p>)
+            )}
+          </div>
+          <DialogFooter>
+            <DialogClose className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">Close</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

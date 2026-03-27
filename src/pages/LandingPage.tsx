@@ -8,7 +8,6 @@ import {
   Search, Users,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
-import { StaffLoginModal } from '@/components/StaffLoginModal';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -43,7 +42,6 @@ const stats = [
 export default function LandingPage() {
   const [jobs, setJobs] = useState<PublicJob[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -353,19 +351,10 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span>© {new Date().getFullYear()} Human Resources 1 Hospital. All rights reserved.</span>
-              <span className="text-border">|</span>
-              <button
-                onClick={() => setLoginModalOpen(true)}
-                className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-              >
-                Staff Access
-              </button>
             </div>
           </div>
         </div>
       </footer>
-
-      <StaffLoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </div>
   );
 }

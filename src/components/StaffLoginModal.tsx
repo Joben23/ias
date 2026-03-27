@@ -71,7 +71,7 @@ export function StaffLoginModal({ open, onOpenChange, theme = 'light' }: StaffLo
 
       if (isAdmin || isHR) {
         console.log('[LOGIN] Redirecting to dashboard');
-        navigate('/dashboard', { replace: true });
+        navigate('/hr1/dashboard', { replace: true });
         onOpenChange(false);
       } else if (isEmployee) {
         console.log('[LOGIN] Redirecting to employee portal');
@@ -104,7 +104,10 @@ export function StaffLoginModal({ open, onOpenChange, theme = 'light' }: StaffLo
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
-        options: { shouldCreateUser: false },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/stafflogin`,
+        },
       });
 
       if (error) {
@@ -145,7 +148,10 @@ export function StaffLoginModal({ open, onOpenChange, theme = 'light' }: StaffLo
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
-        options: { shouldCreateUser: false },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/stafflogin`,
+        },
       });
 
       if (error) {

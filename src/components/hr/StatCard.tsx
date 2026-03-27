@@ -8,15 +8,17 @@ interface StatCardProps {
   gradient?: string;
   subtitle?: string;
   delay?: number;
+  onClick?: () => void;
 }
 
-export function StatCard({ title, value, icon: Icon, gradient = 'gradient-primary', subtitle, delay = 0 }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, gradient = 'gradient-primary', subtitle, delay = 0, onClick }: StatCardProps) {
   return (
     <motion.div
+      onClick={onClick}
+      className={`stat-card group ${onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-all' : ''}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="stat-card group"
     >
       <div className="flex items-start justify-between mb-3">
         <div className={`${gradient} p-2.5 rounded-xl`}>

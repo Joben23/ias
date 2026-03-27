@@ -1,16 +1,43 @@
 import { motion } from 'framer-motion';
 import { UserPlus, FileText, BookOpen, ShieldCheck, CheckCircle2, Users } from 'lucide-react';
-import { useOnboardingEmployees } from '@/hooks/useOnboarding';
+import { OnboardingEmployee, useOnboardingEmployees } from '@/hooks/useOnboarding';
 import { OnboardingEmployeeCard } from '@/components/hr/OnboardingEmployeeCard';
 
 export default function OnboardingPage() {
   const { data: employees = [], isLoading } = useOnboardingEmployees();
 
+  const placeholderEmployees: OnboardingEmployee[] = [
+    {
+      id: 'placeholder-1',
+      full_name: 'Jane Doe',
+      position: 'Nurse Coordinator',
+      department: 'Nursing',
+      employee_id: 'EMP-001',
+      start_date: new Date().toISOString(),
+      employment_type: 'Full-time',
+      onboarding_status: 'Documents Submitted',
+      email: 'jane.doe@example.com',
+    },
+    {
+      id: 'placeholder-2',
+      full_name: 'John Smith',
+      position: 'Lab Technician',
+      department: 'Laboratory',
+      employee_id: 'EMP-002',
+      start_date: new Date().toISOString(),
+      employment_type: 'Full-time',
+      onboarding_status: 'Orientation Completed',
+      email: 'john.smith@example.com',
+    },
+  ];
+
+  const displayEmployees = employees.length >= 2 ? employees : [...employees, ...placeholderEmployees].slice(0, 2);
+
   const statusCounts = {
-    offerAccepted: employees.filter(e => e.onboarding_status === 'Offer Accepted').length,
-    documentsSubmitted: employees.filter(e => e.onboarding_status === 'Documents Submitted').length,
-    orientationCompleted: employees.filter(e => e.onboarding_status === 'Orientation Completed').length,
-    activated: employees.filter(e => e.onboarding_status === 'Employee Activated').length,
+    offerAccepted: displayEmployees.filter(e => e.onboarding_status === 'Offer Accepted').length,
+    documentsSubmitted: displayEmployees.filter(e => e.onboarding_status === 'Documents Submitted').length,
+    orientationCompleted: displayEmployees.filter(e => e.onboarding_status === 'Orientation Completed').length,
+    activated: displayEmployees.filter(e => e.onboarding_status === 'Employee Activated').length,
   };
 
   const flowSteps = [
@@ -71,7 +98,7 @@ export default function OnboardingPage() {
           </div>
         ) : (
           <div className="grid lg:grid-cols-2 gap-4">
-            {employees.map((emp, i) => (
+            {displayEmployees.map((emp, i) => (
               <OnboardingEmployeeCard key={emp.id} employee={emp} index={i} />
             ))}
           </div>

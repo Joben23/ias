@@ -51,7 +51,7 @@ export default function StaffLoginPage() {
           // Redirect to appropriate dashboard
           if (isAdmin || isHR) {
             console.log('[STAFFLOGIN] Redirecting to dashboard');
-            navigate('/dashboard', { replace: true });
+            navigate('/hr1/dashboard', { replace: true });
           } else if (isEmployee) {
             console.log('[STAFFLOGIN] Redirecting to employee portal');
             navigate('/employee-portal', { replace: true });
@@ -92,7 +92,7 @@ export default function StaffLoginPage() {
       window.scrollTo(0, 0);
 
       if (isAdmin || isHR) {
-        navigate('/dashboard', { replace: true });
+        navigate('/hr1/dashboard', { replace: true });
       } else if (isEmployee) {
         navigate('/employee-portal', { replace: true });
       } else {

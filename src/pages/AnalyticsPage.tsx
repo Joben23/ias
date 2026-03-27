@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import {
@@ -12,6 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, LineChart, Line, PieChart, Pie } from 'recharts';
 
 interface PipelineCounts {
@@ -81,10 +83,14 @@ const BAR_COLORS = [
 ];
 
 export default function AnalyticsPage() {
+  const navigate = useNavigate();
+
   const [pipeline, setPipeline] = useState<PipelineCounts>({
     applied: 0, screening: 0, shortlisted: 0, interview: 0,
     selected: 0, offerSent: 0, offerAccepted: 0, hired: 0,
   });
+  const [selectedCard, setSelectedCard] = useState<'totalApplicants' | 'activeJobOpenings' | 'inInterview' | 'totalHired' | 'offerAcceptanceRate' | 'avgTimeToHire' | null>(null);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [totalApplicants, setTotalApplicants] = useState(0);
   const [offersSent, setOffersSent] = useState(0);
   const [offersAccepted, setOffersAccepted] = useState(0);
@@ -93,6 +99,9 @@ export default function AnalyticsPage() {
   const [avgScore, setAvgScore] = useState(0);
   const [topCandidates, setTopCandidates] = useState<TopCandidate[]>([]);
   const [waitingInterview, setWaitingInterview] = useState(0);
+  const [applicants, setApplicants] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [activeJobs, setActiveJobs] = useState(0);
   const [offerAcceptanceRate, setOfferAcceptanceRate] = useState(0);
   const [hiringTrends, setHiringTrends] = useState<HiringTrend[]>([]);
@@ -107,10 +116,12 @@ export default function AnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       // Fetch employees first
-      const { data: employees } = await supabase.from('employees').select('position, department, start_date, applicant_id');
-      
+      const { data: employees } = await supabase.from('employees').select('id, full_name, position, department, start_date, applicant_id');
+      setEmployees(employees || []);
+
       // Fetch all applicants
-      const { data: applicants } = await supabase.from('applicants').select('id, status, department, application_date, position_applied');
+      const { data: applicants } = await supabase.from('applicants').select('id, full_name, status, department, application_date, position_applied');
+      setApplicants(applicants || []);
       if (applicants) {
         setTotalApplicants(applicants.length);
 
@@ -132,7 +143,8 @@ export default function AnalyticsPage() {
       }
 
       // Fetch active job openings
-      const { data: jobs } = await supabase.from('job_postings').select('status');
+      const { data: jobs } = await supabase.from('job_postings').select('id, title, department, status');
+      setJobs(jobs || []);
       if (jobs) {
         setActiveJobs(jobs.filter(j => j.status === 'Open').length);
       }
@@ -232,11 +244,61 @@ export default function AnalyticsPage() {
     }
   };
 
-  const successRate = totalApplicants > 0
-    ? Math.round((pipeline.hired / totalApplicants) * 100)
-    : 0;
+  const rawSuccessRate = totalApplicants > 0 ? Math.round((pipeline.hired / totalApplicants) * 100) : 0;
+  const successRate = Math.min(rawSuccessRate, 100);
+  const successRateOverflow = rawSuccessRate > 100 ? rawSuccessRate : null;
 
   const maxPipeline = Math.max(...Object.values(pipeline), 1);
+
+  const openCardModal = (key: 'totalApplicants' | 'activeJobOpenings' | 'inInterview' | 'totalHired' | 'offerAcceptanceRate' | 'avgTimeToHire') => {
+    setSelectedCard(key);
+    setIsCardModalOpen(true);
+  };
+
+  const modalCardData = () => {
+    if (!selectedCard) return { title: '', subtitle: '', lines: [] as string[] };
+
+    switch (selectedCard) {
+      case 'totalApplicants':
+        return {
+          title: 'Total Applicants',
+          subtitle: 'All people who have applied',
+          lines: applicants.slice(0, 10).map((a: any) => `${a.full_name || a.name} • ${a.position_applied || a.status || ''}`),
+        };
+      case 'activeJobOpenings':
+        return {
+          title: 'Active Job Openings',
+          subtitle: 'Jobs currently available',
+          lines: jobs.filter(j => j.status === 'Open').slice(0, 10).map((j: any) => `${j.title} (${j.department})`),
+        };
+      case 'inInterview':
+        return {
+          title: 'In Interview Stage',
+          subtitle: 'Applicants in interview',
+          lines: applicants.filter((a: any) => a.status === 'Interview Scheduled').slice(0, 10).map((a: any) => `${a.full_name} • ${a.position_applied}`),
+        };
+      case 'totalHired':
+        return {
+          title: 'Total Hired',
+          subtitle: 'Employees hired from pipeline',
+          lines: employees.slice(0, 10).map((e: any) => `${e.full_name} • ${e.position}`),
+        };
+      case 'offerAcceptanceRate':
+        return {
+          title: 'Offer Acceptance Rate',
+          subtitle: `Offers accepted ${offersAccepted} / ${offersSent}`,
+          lines: jobs.filter(j => j.status === 'Open').slice(0, 5).map((j: any) => `${j.title}`),
+        };
+      case 'avgTimeToHire':
+        return {
+          title: 'Average Time to Hire',
+          subtitle: `${avgTimeToHire} days`,
+          lines: applicants.slice(0, 5).map((a: any) => `${a.full_name} applied ${a.application_date ? `(${a.application_date})` : ''}`),
+        };
+      default:
+        return { title: '', subtitle: '', lines: [] as string[] };
+    }
+  };
 
   if (loading) {
     return (
@@ -267,12 +329,48 @@ return (
 
     {/* Overview Metrics */}
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      <StatCard title="Total Applicants" value={totalApplicants} icon={Users} delay={0} />
-      <StatCard title="Active Job Openings" value={activeJobs} icon={Briefcase} delay={0.05} />
-      <StatCard title="In Interview Stage" value={pipeline.interview} icon={UserCheck} delay={0.1} />
-      <StatCard title="Total Hired" value={newHires} icon={UserPlus} delay={0.15} />
-      <StatCard title="Offer Acceptance Rate" value={`${offerAcceptanceRate}%`} icon={Target} delay={0.2} />
-      <StatCard title="Avg Time to Hire" value={`${avgTimeToHire} days`} icon={Clock} delay={0.25} />
+      <StatCard
+        title="Total Applicants"
+        value={totalApplicants}
+        icon={Users}
+        delay={0}
+        onClick={() => openCardModal('totalApplicants')}
+      />
+      <StatCard
+        title="Active Job Openings"
+        value={activeJobs}
+        icon={Briefcase}
+        delay={0.05}
+        onClick={() => openCardModal('activeJobOpenings')}
+      />
+      <StatCard
+        title="In Interview Stage"
+        value={pipeline.interview}
+        icon={UserCheck}
+        delay={0.1}
+        onClick={() => openCardModal('inInterview')}
+      />
+      <StatCard
+        title="Total Hired"
+        value={newHires}
+        icon={UserPlus}
+        delay={0.15}
+        onClick={() => openCardModal('totalHired')}
+      />
+      <StatCard
+        title="Offer Acceptance Rate"
+        value={`${offerAcceptanceRate}%`}
+        icon={Target}
+        delay={0.2}
+        onClick={() => openCardModal('offerAcceptanceRate')}
+      />
+      <StatCard
+        title="Avg Time to Hire"
+        value={`${avgTimeToHire} days`}
+        icon={Clock}
+        delay={0.25}
+        onClick={() => openCardModal('avgTimeToHire')}
+      />
     </div>
 
     {/* Pipeline + Success Rate */}
@@ -292,28 +390,28 @@ return (
             <XAxis dataKey="stage" />
             <YAxis />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="#22c55e">
               {pipelineStages.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${(index % 5) + 1}))`} />
+                <Cell key={`cell-${index}`} fill="#22c55e" />
               ))}
             </Bar>
           </BarChart>
         </ChartContainer>
       </motion.div>
 
-      <motion.div className="card-elevated p-6 text-center">
+      <motion.div className="card-elevated p-6 text-center" onClick={() => openCardModal('offerAcceptanceRate')}>
         <h3 className="text-lg font-semibold mb-4">Success Rate</h3>
-        <div className="relative w-32 h-32 mx-auto mb-4">
-          <PieChart width={128} height={128}>
+        <div className="relative w-56 h-56 mx-auto mb-4">
+          <PieChart width={240} height={240}>
             <Pie
               data={[
-                { name: 'Success', value: Math.min(successRate, 100), fill: 'hsl(var(--primary))' },
+                { name: 'Success', value: successRate, fill: '#22c55e' },
                 { name: 'Remaining', value: Math.max(100 - successRate, 0), fill: 'hsl(var(--muted))' }
               ]}
-              cx={64}
-              cy={64}
-              innerRadius={40}
-              outerRadius={60}
+              cx={120}
+              cy={120}
+              innerRadius={75}
+              outerRadius={102}
               startAngle={90}
               endAngle={450}
               dataKey="value"
@@ -321,13 +419,49 @@ return (
           </PieChart>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-2xl font-bold">{successRate}%</p>
-              <p className="text-xs text-muted-foreground">Success</p>
+              <p className="text-4xl font-bold leading-none">{successRate}%</p>
+              <p className="text-sm text-muted-foreground">Success</p>
             </div>
           </div>
         </div>
       </motion.div>
     </div>
+
+    <Dialog open={isCardModalOpen} onOpenChange={setIsCardModalOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{modalCardData().title}</DialogTitle>
+          <DialogDescription>{modalCardData().subtitle}</DialogDescription>
+        </DialogHeader>
+        <div className="text-center py-4">
+          <p className="text-5xl font-bold">{(() => {
+            const selected = selectedCard;
+            if (selected === 'totalApplicants') return totalApplicants;
+            if (selected === 'activeJobOpenings') return activeJobs;
+            if (selected === 'inInterview') return pipeline.interview;
+            if (selected === 'totalHired') return newHires;
+            if (selected === 'offerAcceptanceRate') return `${offerAcceptanceRate}%`;
+            if (selected === 'avgTimeToHire') return `${avgTimeToHire} days`;
+            return '';
+          })()}</p>
+          {successRateOverflow && selectedCard === 'offerAcceptanceRate' && (
+            <p className="text-xs text-destructive mt-2">Raw success is {rawSuccessRate}%, capped to 100% for display.</p>
+          )}
+        </div>
+        <div className="max-h-48 overflow-y-auto text-left text-sm p-2 space-y-1">
+          {modalCardData().lines.length === 0 ? (
+            <p className="text-muted-foreground">No detail lines available.</p>
+          ) : (
+            modalCardData().lines.map((line, idx) => (
+              <p key={idx} className="truncate">{line}</p>
+            ))
+          )}
+        </div>
+        <DialogFooter>
+          <DialogClose className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">Close</DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     {/* Interview Performance */}
     <motion.div className="card-elevated p-6 space-y-6">
