@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, Clock, User, Award, Calendar, LogOut, ChevronLeft } from 'lucide-react';
+import { CheckCircle, Clock, User, Award, Calendar, LogOut, ChevronLeft, Play, StopCircle } from 'lucide-react';
 import { ChangePasswordSection } from '@/components/ChangePasswordSection';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +33,7 @@ interface Recognition {
 }
 
 interface EmployeeData {
+  id: string;
   employee_id: string;
   full_name: string;
   email: string;
@@ -44,14 +45,27 @@ interface EmployeeData {
   onboarding_status?: string;
 }
 
+interface TodayAttendance {
+  id: string;
+  time_in: string | null;
+  time_out: string | null;
+  total_hours: number | null;
+  status: string;
+}
+
 export default function EmployeePortalPage() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const hasCheckedAttendance = useRef(false);
+  
   const [employeeData, setEmployeeData] = useState<EmployeeData | null>(null);
   const [onboardingTasks, setOnboardingTasks] = useState<OnboardingTask[]>([]);
   const [recognitions, setRecognitions] = useState<Recognition[]>([]);
+  const [todayAttendance, setTodayAttendance] = useState<TodayAttendance | null>(null);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
+  const [clockInLoading, setClockInLoading] = useState(false);
+  const [clockOutLoading, setClockOutLoading] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -60,6 +74,117 @@ export default function EmployeePortalPage() {
       title: 'Signed out',
       description: 'You have been successfully signed out.',
     });
+  };
+
+  const handleClockIn = async () => {
+    if (!employeeData || !employeeData.id) {
+      toast({
+        title: 'Error',
+        description: 'Employee data not found',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setClockInLoading(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+
+      // Check if already clocked in today
+      if (todayAttendance && todayAttendance.time_in) {
+        toast({
+          title: 'Already clocked in',
+          description: 'You already clocked in today.',
+        });
+        setClockInLoading(false);
+        return;
+      }
+
+      // Determine status (late if after 9:00 AM)
+      const hours = new Date().getHours();
+      const status = hours >= 9 ? 'late' : 'present';
+
+      // Insert new attendance record
+      const { data, error } = await (supabase
+        .from('attendance_logs' as any)
+        .insert({
+          employee_id: employeeData.id,
+          full_name: employeeData.full_name,
+          date: today,
+          time_in: now,
+          time_out: null,
+          total_hours: null,
+          status: status,
+        })
+        .select()
+        .single() as any);
+
+      if (error) throw error;
+
+      setTodayAttendance(data);
+      toast({
+        title: 'Clocked in successfully',
+        description: `Status: ${status === 'late' ? 'Late' : 'Present'}`,
+      });
+    } catch (error) {
+      console.error('Error clocking in:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clock in. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setClockInLoading(false);
+    }
+  };
+
+  const handleClockOut = async () => {
+    if (!todayAttendance || !todayAttendance.id) {
+      toast({
+        title: 'Error',
+        description: 'No active clock-in found',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setClockOutLoading(true);
+    try {
+      const now = new Date().toISOString();
+      const clockInTime = todayAttendance.time_in ? new Date(todayAttendance.time_in) : new Date();
+      const clockOutTime = new Date(now);
+      const diffMs = clockOutTime.getTime() - clockInTime.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      // Update attendance record
+      const { data, error } = await (supabase
+        .from('attendance_logs' as any)
+        .update({
+          time_out: now,
+          total_hours: Math.round(diffHours * 100) / 100, // Round to 2 decimal places
+        })
+        .eq('id', todayAttendance.id)
+        .select()
+        .single() as any);
+
+      if (error) throw error;
+
+      setTodayAttendance(data);
+      toast({
+        title: 'Clocked out successfully',
+        description: `Total hours: ${(Math.round(diffHours * 100) / 100).toFixed(2)}`,
+      });
+    } catch (error) {
+      console.error('Error clocking out:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to clock out. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setClockOutLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -84,6 +209,30 @@ export default function EmployeePortalPage() {
     }
   };
 
+  const fetchTodayAttendance = async (empId: string) => {
+    // Use ref to prevent multiple API calls
+    if (hasCheckedAttendance.current) return;
+    hasCheckedAttendance.current = true;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await (supabase
+        .from('attendance_logs' as any)
+        .select('*')
+        .eq('employee_id', empId)
+        .eq('date', today)
+        .maybeSingle() as any);
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching today\'s attendance:', error);
+      } else {
+        setTodayAttendance(data || null);
+      }
+    } catch (error) {
+      console.error('Error fetching today\'s attendance:', error);
+    }
+  };
+
   const fetchEmployeeData = async () => {
     try {
       const { data, error } = await supabase
@@ -104,6 +253,10 @@ export default function EmployeePortalPage() {
         }
       } else {
         setEmployeeData(data);
+        // Fetch today's attendance only after getting employee data
+        if (data && data.id) {
+          fetchTodayAttendance(data.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching employee data:', error);
@@ -356,6 +509,116 @@ export default function EmployeePortalPage() {
             </CardContent>
           </Card>
 
+          {/* Attendance - Clock In/Out */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Attendance
+              </CardTitle>
+              <CardDescription>
+                Track your daily time in and time out
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {todayAttendance ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Time In</p>
+                      <p className="text-lg font-semibold">
+                        {todayAttendance.time_in
+                          ? new Date(todayAttendance.time_in).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'Not clocked in'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Time Out</p>
+                      <p className="text-lg font-semibold">
+                        {todayAttendance.time_out
+                          ? new Date(todayAttendance.time_out).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'Not clocked out'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Total Hours</p>
+                      <p className="text-lg font-semibold">
+                        {todayAttendance.total_hours ? `${todayAttendance.total_hours.toFixed(2)}h` : '-'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-1">Status</p>
+                      <Badge
+                        className={
+                          todayAttendance.status === 'present'
+                            ? 'bg-green-500/10 text-green-700 border-0'
+                            : todayAttendance.status === 'late'
+                              ? 'bg-yellow-500/10 text-yellow-700 border-0'
+                              : 'bg-red-500/10 text-red-700 border-0'
+                        }
+                      >
+                        {todayAttendance.status || 'N/A'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleClockIn}
+                      disabled={
+                        !!todayAttendance.time_in ||
+                        clockInLoading ||
+                        clockOutLoading
+                      }
+                      className="flex-1 gap-2"
+                      variant={todayAttendance.time_in ? 'secondary' : 'default'}
+                    >
+                      <Play className="h-4 w-4" />
+                      {clockInLoading ? 'Clocking In...' : 'Clock In'}
+                    </Button>
+
+                    <Button
+                      onClick={handleClockOut}
+                      disabled={
+                        !todayAttendance.time_in ||
+                        !!todayAttendance.time_out ||
+                        clockOutLoading ||
+                        clockInLoading
+                      }
+                      className="flex-1 gap-2"
+                      variant={todayAttendance.time_out ? 'secondary' : 'destructive'}
+                    >
+                      <StopCircle className="h-4 w-4" />
+                      {clockOutLoading ? 'Clocking Out...' : 'Clock Out'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No attendance record for today</p>
+                  <Button
+                    onClick={handleClockIn}
+                    disabled={clockInLoading}
+                    className="mt-4 gap-2"
+                  >
+                    <Play className="h-4 w-4" />
+                    {clockInLoading ? 'Clocking In...' : 'Clock In Now'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Recognition */}
           <Card className="lg:col-span-3">
             <CardHeader>
@@ -364,8 +627,7 @@ export default function EmployeePortalPage() {
                 Recent Recognition
               </CardTitle>
               <CardDescription>
-                Recognition and appreciation from your colleagues
-              </CardDescription>
+                Recognition and appreciation from your colleagues</CardDescription>
             </CardHeader>
             <CardContent>
               {recognitions.length === 0 ? (

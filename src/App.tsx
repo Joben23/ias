@@ -44,6 +44,8 @@ import EssLearningPage from "./pages/EssLearningPage";
 import EssCompetenciesPage from "./pages/EssCompetenciesPage";
 import EssCareerPathPage from "./pages/EssCareerPathPage";
 import Hr2DashboardPage from "./pages/Hr2DashboardPage";
+import Hr3DashboardPage from "./pages/Hr3DashboardPage";
+import Hr3AttendancePage from "./pages/Hr3AttendancePage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import { AuthCallback } from "./pages/AuthCallback";
 
@@ -128,6 +130,22 @@ const App = () => (
                           <Route path="ess/career" element={<EssCareerPathPage />} />
                           <Route path="competency" element={<CompetencyManagementPage />} />
                           <Route path="competency/:employeeId" element={<EmployeeCompetencyPage />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* HR3 Routes - Workforce Operations & Time Management */}
+                <Route
+                  path="/hr3/*"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Routes>
+                          <Route path="dashboard" element={<Hr3DashboardPage />} />
+                          <Route path="attendance" element={<Hr3AttendancePage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>

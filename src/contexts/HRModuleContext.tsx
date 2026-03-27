@@ -31,11 +31,11 @@ export const HR_MODULES: Record<HRModule, HRModuleInfo> = {
   },
   hr3: {
     id: 'hr3',
-    name: 'HR3',
-    description: 'Coming Soon',
-    subtitle: 'Future HR Module',
-    version: 'Coming Soon',
-    available: false,
+    name: 'HR3 – Workforce Operations',
+    description: 'Time & Attendance',
+    subtitle: 'Workforce Operations & Time Management',
+    version: 'v1.0',
+    available: true,
   },
   hr4: {
     id: 'hr4',

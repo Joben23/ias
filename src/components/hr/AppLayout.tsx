@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
   HeartPulse, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
-  BookOpen, GraduationCap, Target, UserCheck, ChevronDown, Check,
+  BookOpen, GraduationCap, Target, UserCheck, ChevronDown, Check, Clock,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import { NotificationBell } from '@/components/hr/NotificationBell';
@@ -66,6 +66,14 @@ const getNavigationConfig = (hrModule: HRModule) => {
           { path: `${basePath}/succession`, label: 'Succession Planning', icon: Target },
           { path: `${basePath}/ess`, label: 'Employee Self-Service', icon: UserCheck },
           { path: `${basePath}/competency`, label: 'Competency Management', icon: Award },
+        ],
+      };
+
+    case 'hr3':
+      return {
+        dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
+        operations: [
+          { path: `${basePath}/attendance`, label: 'Attendance', icon: Clock },
         ],
       };
 
@@ -254,6 +262,36 @@ function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navConfig.learning?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+
+        {selectedModule === 'hr3' && (
+          <>
+            {/* Workforce Operations */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Operations' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.operations?.map(item => (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton asChild tooltip={item.label}>
                         <NavLink
