@@ -39,11 +39,11 @@ export const HR_MODULES: Record<HRModule, HRModuleInfo> = {
   },
   hr4: {
     id: 'hr4',
-    name: 'HR4',
-    description: 'Coming Soon',
-    subtitle: 'Future HR Module',
-    version: 'Coming Soon',
-    available: false,
+    name: 'HR4 – Compensation & HR Intelligence',
+    description: 'Payroll & Benefits',
+    subtitle: 'Compensation & HR Intelligence',
+    version: 'v1.0',
+    available: true,
   },
 };
 
@@ -93,7 +93,7 @@ export function HRModuleProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('selectedHRModule', detectedModule);
       }
     }
-  }, [location.pathname, selectedModule]);
+  }, [location.pathname]); // Removed selectedModule from dependencies to prevent loops
 
   // Save to localStorage when changed
   useEffect(() => {

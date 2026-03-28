@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HRModuleProvider } from "@/contexts/HRModuleContext";
@@ -46,6 +46,14 @@ import EssCareerPathPage from "./pages/EssCareerPathPage";
 import Hr2DashboardPage from "./pages/Hr2DashboardPage";
 import Hr3DashboardPage from "./pages/Hr3DashboardPage";
 import Hr3AttendancePage from "./pages/Hr3AttendancePage";
+import Hr3ShiftsPage from "./pages/Hr3ShiftsPage";
+import Hr3SchedulesPage from "./pages/Hr3SchedulesPage";
+import Hr3TimesheetsPage from "./pages/Hr3TimesheetsPage";
+import Hr3LeavesPage from "./pages/Hr3LeavesPage";
+import Hr3ClaimsPage from "./pages/Hr3ClaimsPage";
+import Hr4HcmPage from "./pages/Hr4HcmPage";
+import Hr4PayrollPage from "./pages/Hr4PayrollPage";
+import Hr4CompensationPage from "./pages/Hr4CompensationPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import { AuthCallback } from "./pages/AuthCallback";
 
@@ -146,6 +154,29 @@ const App = () => (
                         <Routes>
                           <Route path="dashboard" element={<Hr3DashboardPage />} />
                           <Route path="attendance" element={<Hr3AttendancePage />} />
+                          <Route path="shifts" element={<Hr3ShiftsPage />} />
+                          <Route path="schedules" element={<Hr3SchedulesPage />} />
+                          <Route path="timesheets" element={<Hr3TimesheetsPage />} />
+                          <Route path="leaves" element={<Hr3LeavesPage />} />
+                          <Route path="claims" element={<Hr3ClaimsPage />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* HR4 Routes - Human Capital Management */}
+                <Route
+                  path="/hr4/*"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Routes>
+                          <Route path="/" element={<Navigate to="/hr4/hcm" replace />} />
+                          <Route path="hcm" element={<Hr4HcmPage />} />
+                          <Route path="payroll" element={<Hr4PayrollPage />} />
+                          <Route path="compensation" element={<Hr4CompensationPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>

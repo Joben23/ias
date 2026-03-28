@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
   HeartPulse, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
   BookOpen, GraduationCap, Target, UserCheck, ChevronDown, Check, Clock,
+  CheckCircle, Calendar, DollarSign,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import { NotificationBell } from '@/components/hr/NotificationBell';
@@ -73,7 +74,22 @@ const getNavigationConfig = (hrModule: HRModule) => {
       return {
         dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
         operations: [
+          { path: `${basePath}/shifts`, label: 'Shift Management', icon: Clock },
+          { path: `${basePath}/schedules`, label: 'Schedule Management', icon: CalendarCheck },
           { path: `${basePath}/attendance`, label: 'Attendance', icon: Clock },
+          { path: `${basePath}/timesheets`, label: 'Timesheets', icon: CheckCircle },
+          { path: `${basePath}/leaves`, label: 'Leave Management', icon: Calendar },
+          { path: `${basePath}/claims`, label: 'Claims & Reimbursements', icon: DollarSign },
+        ],
+      };
+
+    case 'hr4':
+      return {
+        dashboard: { path: `${basePath}/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
+        hcm: [
+          { path: `${basePath}/hcm`, label: 'Human Capital Management', icon: Users },
+          { path: `${basePath}/payroll`, label: 'Payroll Management', icon: DollarSign },
+          { path: `${basePath}/compensation`, label: 'Compensation Planning', icon: Award },
         ],
       };
 
@@ -97,8 +113,16 @@ function AppSidebar() {
 
   const handleModuleSwitch = (moduleId: HRModule) => {
     setSelectedModule(moduleId);
-    // Navigate to the dashboard of the new module
-    navigate(`/${moduleId}/dashboard`);
+    // Navigate to the appropriate default page for each module
+    if (moduleId === 'hr1') {
+      navigate('/hr1/dashboard');
+    } else if (moduleId === 'hr2') {
+      navigate('/hr2/dashboard');
+    } else if (moduleId === 'hr3') {
+      navigate('/hr3/dashboard');
+    } else if (moduleId === 'hr4') {
+      navigate('/hr4/hcm'); // HR4 default page is HCM
+    }
   };
 
   return (
@@ -125,7 +149,7 @@ function AppSidebar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64">
-              {Object.values(HR_MODULES).map((module) => (
+              {Object.values(HR_MODULES).filter(module => module.available).map((module) => (
                 <DropdownMenuItem
                   key={module.id}
                   onClick={() => handleModuleSwitch(module.id)}
@@ -292,6 +316,36 @@ function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navConfig.operations?.map(item => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild tooltip={item.label}>
+                        <NavLink
+                          to={item.path}
+                          end={true}
+                          className="text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+
+        {selectedModule === 'hr4' && (
+          <>
+            {/* Human Capital Management */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+                {!collapsed ? 'Human Capital Management' : ''}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navConfig.hcm?.map(item => (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton asChild tooltip={item.label}>
                         <NavLink

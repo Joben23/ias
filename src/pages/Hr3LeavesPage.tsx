@@ -1,0 +1,451 @@
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Calendar, User, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+interface Leave {
+  id: string;
+  employee_id: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  employees: {
+    full_name: string;
+  };
+}
+
+type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
+
+export default function Hr3LeavesPage() {
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+
+  const fetchLeaves = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      let query = supabase
+        .from('leaves')
+        .select(`
+          *,
+          employees:employee_id (
+            full_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      // Apply status filter
+      if (filterStatus !== 'all') {
+        query = query.eq('status', filterStatus);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setLeaves((data || []) as Leave[]);
+    } catch (error) {
+      console.error('Error fetching leaves:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load leaves',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [filterStatus]);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, [fetchLeaves]);
+
+  const handleStatusUpdate = async (leaveId: string, newStatus: 'approved' | 'rejected') => {
+    try {
+      // Update leave status
+      const { error: leaveError } = await supabase
+        .from('leaves')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', leaveId);
+
+      if (leaveError) throw leaveError;
+
+      // If approved, create attendance records and timesheets
+      if (newStatus === 'approved') {
+        await processApprovedLeave(leaveId);
+      }
+
+      toast({
+        title: 'Success',
+        description: `Leave ${newStatus} successfully`,
+      });
+
+      fetchLeaves();
+    } catch (error) {
+      console.error('Error updating leave:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update leave',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processApprovedLeave = async (leaveId: string) => {
+    try {
+      // Get leave details
+      const { data: leave, error: leaveError } = await supabase
+        .from('leaves')
+        .select('*')
+        .eq('id', leaveId)
+        .single();
+
+      if (leaveError) throw leaveError;
+
+      const startDate = new Date(leave.start_date);
+      const endDate = new Date(leave.end_date);
+
+      // Process each date in the leave range
+      for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        const currentDate = date.toISOString().split('T')[0];
+
+        // 1. Create/update attendance record with status 'leave'
+        const { data: existingAttendance } = await supabase
+          .from('attendance_logs')
+          .select('id')
+          .eq('employee_id', leave.employee_id)
+          .eq('date', currentDate)
+          .maybeSingle();
+
+        if (existingAttendance) {
+          // Update existing attendance
+          await supabase
+            .from('attendance_logs')
+            .update({
+              status: 'leave',
+              time_in: null,
+              time_out: null,
+              total_hours: 0,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingAttendance.id);
+        } else {
+          // Create new attendance record
+          await supabase
+            .from('attendance_logs')
+            .insert({
+              employee_id: leave.employee_id,
+              full_name: '', // Will be populated by trigger or manually
+              date: currentDate,
+              time_in: null,
+              time_out: null,
+              total_hours: 0,
+              status: 'leave',
+            });
+        }
+
+        // 2. Create/update timesheet with 0 hours and approved status
+        const { data: existingTimesheet } = await supabase
+          .from('timesheets')
+          .select('id')
+          .eq('employee_id', leave.employee_id)
+          .eq('date', currentDate)
+          .maybeSingle();
+
+        if (existingTimesheet) {
+          // Update existing timesheet
+          await supabase
+            .from('timesheets')
+            .update({
+              total_hours: 0,
+              overtime_hours: 0,
+              status: 'approved',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingTimesheet.id);
+        } else {
+          // Create new timesheet
+          await supabase
+            .from('timesheets')
+            .insert({
+              employee_id: leave.employee_id,
+              date: currentDate,
+              total_hours: 0,
+              overtime_hours: 0,
+              status: 'approved',
+            });
+        }
+
+        // 3. Update schedule status if exists
+        const { data: existingSchedule } = await supabase
+          .from('schedules')
+          .select('id')
+          .eq('employee_id', leave.employee_id)
+          .eq('date', currentDate)
+          .maybeSingle();
+
+        if (existingSchedule) {
+          await supabase
+            .from('schedules')
+            .update({
+              status: 'on_leave',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingSchedule.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing approved leave:', error);
+      throw error;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = formatDate(startDate);
+    const end = formatDate(endDate);
+    return start === end ? start : `${start} - ${end}`;
+  };
+
+  const getLeaveTypeBadge = (leaveType: string) => {
+    const colors = {
+      sick: 'bg-red-500/10 text-red-700 border-0',
+      vacation: 'bg-blue-500/10 text-blue-700 border-0',
+      emergency: 'bg-orange-500/10 text-orange-700 border-0',
+      personal: 'bg-purple-500/10 text-purple-700 border-0',
+    };
+
+    return (
+      <Badge className={colors[leaveType as keyof typeof colors] || 'bg-gray-500/10 text-gray-700 border-0'}>
+        {leaveType.charAt(0).toUpperCase() + leaveType.slice(1)}
+      </Badge>
+    );
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-700 border-0">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge className="bg-green-500/10 text-green-700 border-0">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge className="bg-red-500/10 text-red-700 border-0">
+            <XCircle className="w-3 h-3 mr-1" />
+            Rejected
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20';
+      case 'approved':
+        return 'border-l-green-500 bg-green-50 dark:bg-green-950/20';
+      case 'rejected':
+        return 'border-l-red-500 bg-red-50 dark:bg-red-950/20';
+      default:
+        return 'border-l-gray-500 bg-gray-50 dark:bg-gray-950/20';
+    }
+  };
+
+  return (
+    <div className="space-y-8 p-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
+          <p className="text-muted-foreground">
+            Review and manage employee leave requests
+          </p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4 items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-2 block">Filter by Status</label>
+          <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as FilterStatus)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Leaves */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Leave Requests</CardTitle>
+          <CardDescription>
+            Manage employee leave applications and approvals
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Loading leave requests...</p>
+            </div>
+          ) : leaves.length === 0 ? (
+            <div className="text-center py-8">
+              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No leave requests found</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Leave requests will appear here when employees submit them
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {leaves.map((leave) => (
+                <Card key={leave.id} className={`border-l-4 ${getStatusColor(leave.status)}`}>
+                  <CardContent className="pt-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <h3 className="font-semibold text-lg">{leave.employees.full_name}</h3>
+                      </div>
+                      {getStatusBadge(leave.status)}
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        {getLeaveTypeBadge(leave.leave_type)}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span>{formatDateRange(leave.start_date, leave.end_date)}</span>
+                      </div>
+                      {leave.reason && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <span className="text-muted-foreground">{leave.reason}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {leave.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" className="flex-1 gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              Approve
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Approve Leave Request</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to approve this leave request for {leave.employees.full_name}?
+                                This will automatically update their attendance and timesheets for the leave period.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleStatusUpdate(leave.id, 'approved')}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Approve
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="destructive" className="flex-1 gap-1">
+                              <XCircle className="w-3 h-3" />
+                              Reject
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Reject Leave Request</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to reject this leave request for {leave.employees.full_name}?
+                                This action can be reversed later.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleStatusUpdate(leave.id, 'rejected')}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Reject
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
