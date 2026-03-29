@@ -121,7 +121,7 @@ function AppSidebar() {
     } else if (moduleId === 'hr3') {
       navigate('/hr3/dashboard');
     } else if (moduleId === 'hr4') {
-      navigate('/hr4/hcm'); // HR4 default page is HCM
+      navigate('/hr4/dashboard'); // HR4 default page is Dashboard
     }
   };
 

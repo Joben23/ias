@@ -54,6 +54,10 @@ import Hr3ClaimsPage from "./pages/Hr3ClaimsPage";
 import Hr4HcmPage from "./pages/Hr4HcmPage";
 import Hr4PayrollPage from "./pages/Hr4PayrollPage";
 import Hr4CompensationPage from "./pages/Hr4CompensationPage";
+import Hr4DashboardPage from "./pages/Hr4DashboardPage";
+import Hr4EmployeeCompensationPage from "./pages/Hr4EmployeeCompensationPage";
+import Hr4BenefitsPage from "./pages/Hr4BenefitsPage";
+import Hr4EmployeeBenefitsPage from "./pages/Hr4EmployeeBenefitsPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import { AuthCallback } from "./pages/AuthCallback";
 
@@ -173,10 +177,14 @@ const App = () => (
                     <ProtectedRoute>
                       <AppLayout>
                         <Routes>
-                          <Route path="/" element={<Navigate to="/hr4/hcm" replace />} />
+                          <Route path="/" element={<Navigate to="/hr4/dashboard" replace />} />
+                          <Route path="dashboard" element={<Hr4DashboardPage />} />
                           <Route path="hcm" element={<Hr4HcmPage />} />
                           <Route path="payroll" element={<Hr4PayrollPage />} />
                           <Route path="compensation" element={<Hr4CompensationPage />} />
+                          <Route path="compensation/:employeeId" element={<Hr4EmployeeCompensationPage />} />
+                          <Route path="benefits" element={<Hr4BenefitsPage />} />
+                          <Route path="benefits/:employeeId" element={<Hr4EmployeeBenefitsPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
