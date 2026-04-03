@@ -390,14 +390,6 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      {!collapsed && (
-        <div className="p-4 m-3 rounded-xl bg-sidebar-accent border border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/60 mb-1">{currentModuleInfo.subtitle}</p>
-          <p className="text-sm font-semibold text-sidebar-foreground">{currentModuleInfo.description}</p>
-          <p className="text-[11px] text-sidebar-foreground/40 mt-1">HR Subsystem {currentModuleInfo.version}</p>
-        </div>
-      )}
     </Sidebar>
   );
 }

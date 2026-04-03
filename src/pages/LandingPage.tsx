@@ -82,7 +82,7 @@ export default function LandingPage() {
               <HeartPulse className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-display font-bold text-foreground text-lg">Human Resources 1</span>
+              <span className="font-display font-bold text-foreground text-lg">Health Works</span>
               <span className="text-muted-foreground text-xs block -mt-1">Hospital</span>
             </div>
           </Link>
@@ -107,12 +107,12 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="max-w-3xl"
+            className="max-w-1xl"
           >
             <span className="inline-flex items-center gap-2 text-sm font-medium text-primary bg-primary/10 px-4 py-1.5 rounded-full mb-6">
               <HeartPulse className="w-4 h-4" /> We're Hiring
