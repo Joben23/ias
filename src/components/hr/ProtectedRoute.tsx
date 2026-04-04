@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profile } = useAuth();
+  const { authUser, loading } = useAuth();
 
   if (loading) {
     return (
@@ -12,11 +12,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return <Navigate to="/" replace state={{ from: '/dashboard' }} />;
+  // Require authenticated user
+  if (!authUser) {
+    return <Navigate to="/" replace state={{ from: '/dashboard' }} />;
+  }
 
-  // Check if user must change password
-  if (profile?.must_change_password) {
-    return <Navigate to="/auth/change-password" replace />;
+  // Check if user has admin/hr roles
+  if (!authUser.roles.includes('admin') && !authUser.roles.includes('hr')) {
+    return <Navigate to="/employee-portal" replace />;
   }
 
   return <>{children}</>;

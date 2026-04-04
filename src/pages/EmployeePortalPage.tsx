@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, Clock, User, Award, Calendar, LogOut, ChevronLeft, Play, StopCircle, Plus, Loader2, DollarSign, FileText, Building, TrendingUp, Minus } from 'lucide-react';
 import { ChangePasswordSection } from '@/components/ChangePasswordSection';
+import { StaffLoginModal } from '@/components/StaffLoginModal';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -29,6 +30,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+// Helper function to get initials from name
+function getInitials(name: string | null | undefined): string {
+  if (!name || !name.trim()) return 'EMP';
+  return name
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 interface OnboardingTask {
   id: string;
@@ -62,6 +74,15 @@ interface EmployeeData {
   start_date: string;
   status: string;
   onboarding_status?: string;
+  // Additional employment properties
+  employment_type?: string;
+  pay_frequency?: string;
+  salary?: number;
+  hire_date?: string;
+  employment_status?: string;
+  sss_number?: string;
+  philhealth_number?: string;
+  pagibig_number?: string;
 }
 
 interface TodayAttendance {
@@ -137,7 +158,7 @@ interface Payroll {
 }
 
 export default function EmployeePortalPage() {
-  const { user, profile, signOut } = useAuth();
+  const { authUser, signOut } = useAuth();
   const navigate = useNavigate();
   const hasCheckedAttendance = useRef(false);
   
@@ -172,14 +193,11 @@ export default function EmployeePortalPage() {
   const [dataLoading, setDataLoading] = useState(false);
   const [clockInLoading, setClockInLoading] = useState(false);
   const [clockOutLoading, setClockOutLoading] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
-    toast({
-      title: 'Signed out',
-      description: 'You have been successfully signed out.',
-    });
+    setLoginModalOpen(true);
   };
 
   const handleClockIn = async () => {
@@ -208,38 +226,12 @@ export default function EmployeePortalPage() {
         return;
       }
 
-      // Fetch today's scheduled shift
-      const { data: scheduleData, error: scheduleError } = await supabase
-        .from('schedules')
-        .select(`
-          *,
-          shifts:shift_id (
-            name,
-            start_time,
-            end_time
-          )
-        `)
-        .eq('employee_id', employeeData.id)
-        .eq('date', today)
-        .maybeSingle();
-
-      if (scheduleError) {
-        console.error('Error fetching schedule:', scheduleError);
-      }
-
-      // Determine status based on scheduled shift
+      // Determine status based on time
       let status = 'present';
-      if (scheduleData && scheduleData.shifts) {
-        const shiftStartTime = new Date(`${today}T${scheduleData.shifts.start_time}`);
-        if (currentTime > shiftStartTime) {
-          status = 'late';
-        }
-      } else {
-        // No schedule found, use default logic (late if after 9:00 AM)
-        const hours = currentTime.getHours();
-        if (hours >= 9) {
-          status = 'late';
-        }
+      // Default logic: late if after 9:00 AM
+      const hours = currentTime.getHours();
+      if (hours >= 9) {
+        status = 'late';
       }
 
       // Insert new attendance record
@@ -288,6 +280,7 @@ export default function EmployeePortalPage() {
 
     setClockOutLoading(true);
     try {
+      const today = new Date().toISOString().split('T')[0];
       const now = new Date().toISOString();
       const clockInTime = todayAttendance.time_in ? new Date(todayAttendance.time_in) : new Date();
       const clockOutTime = new Date(now);
@@ -329,10 +322,10 @@ export default function EmployeePortalPage() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (authUser) {
       fetchAllData();
     }
-  }, [user]);
+  }, [authUser]);
 
   const fetchAllData = async () => {
     setDataLoading(true);
@@ -375,226 +368,111 @@ export default function EmployeePortalPage() {
   };
 
   const fetchTodaySchedule = async (empId: string) => {
+    // Schedules table not available in current schema
+    // Initialize with null
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('schedules')
-        .select(`
-          *,
-          shifts:shift_id (
-            name,
-            start_time,
-            end_time
-          )
-        `)
-        .eq('employee_id', empId)
-        .eq('date', today)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching today\'s schedule:', error);
-      } else {
-        setTodaySchedule(data as Schedule | null);
-      }
+      setTodaySchedule(null);
+      console.log('[SCHEDULE] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching today\'s schedule:', error);
+      console.error('Error with today\'s schedule:', error);
+      setTodaySchedule(null);
     }
   };
 
   const fetchUpcomingSchedules = async (empId: string) => {
+    // Schedules table not available in current schema
+    // Initialize with empty array
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('schedules')
-        .select(`
-          *,
-          shifts:shift_id (
-            name,
-            start_time,
-            end_time
-          )
-        `)
-        .eq('employee_id', empId)
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .limit(5);
-
-      if (error) {
-        console.error('Error fetching upcoming schedules:', error);
-        setUpcomingSchedules([]);
-      } else {
-        setUpcomingSchedules(data as Schedule[] || []);
-      }
+      setUpcomingSchedules([]);
+      console.log('[SCHEDULES] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching upcoming schedules:', error);
+      console.error('Error with upcoming schedules:', error);
       setUpcomingSchedules([]);
     }
   };
 
   const fetchTimesheets = async (empId: string) => {
+    // Timesheets table not available in current schema
+    // Initialize with empty array
     try {
-      const { data, error } = await supabase
-        .from('timesheets')
-        .select('*')
-        .eq('employee_id', empId)
-        .order('date', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching timesheets:', error);
-        setTimesheets([]);
-      } else {
-        setTimesheets(data as Timesheet[] || []);
-      }
+      setTimesheets([]);
+      console.log('[TIMESHEETS] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching timesheets:', error);
+      console.error('Error with timesheets:', error);
       setTimesheets([]);
     }
   };
 
   const fetchLeaves = async (empId: string) => {
+    // Leaves table not available in current schema
+    // Initialize with empty array
     try {
-      const { data, error } = await supabase
-        .from('leaves')
-        .select('*')
-        .eq('employee_id', empId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching leaves:', error);
-        setLeaves([]);
-      } else {
-        setLeaves(data as Leave[] || []);
-      }
+      setLeaves([]);
+      console.log('[LEAVES] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching leaves:', error);
+      console.error('Error with leaves:', error);
       setLeaves([]);
     }
   };
 
   const fetchClaims = async (empId: string) => {
+    // Claims table not available in current schema
+    // Initialize with empty array
     try {
-      const { data, error } = await supabase
-        .from('claims')
-        .select('*')
-        .eq('employee_id', empId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching claims:', error);
-        setClaims([]);
-      } else {
-        setClaims(data as Claim[] || []);
-      }
+      setClaims([]);
+      console.log('[CLAIMS] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching claims:', error);
+      console.error('Error with claims:', error);
       setClaims([]);
     }
   };
 
   const fetchPayrolls = async (empId: string) => {
+    // Payrolls table not available in current schema
+    // Initialize with empty array
     try {
-      const { data, error } = await supabase
-        .from('payrolls')
-        .select('*')
-        .eq('employee_id', empId)
-        .order('created_at', { ascending: false })
-        .limit(12);
-
-      if (error) {
-        console.error('Error fetching payrolls:', error);
-        setPayrolls([]);
-      } else {
-        setPayrolls(data as Payroll[] || []);
-      }
+      setPayrolls([]);
+      console.log('[PAYROLLS] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching payrolls:', error);
+      console.error('Error with payrolls:', error);
       setPayrolls([]);
     }
   };
 
   const fetchCompensations = async (empId: string) => {
+    // Compensations table not available in current schema
+    // Initialize with empty array
     try {
-      const { data, error } = await supabase
-        .from('compensations')
-        .select('*')
-        .eq('employee_id', empId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error('Error fetching compensations:', error);
-        setCompensations([]);
-      } else {
-        setCompensations(data as Compensation[] || []);
-      }
+      setCompensations([]);
+      console.log('[COMPENSATIONS] Table not yet available in schema');
     } catch (error) {
-      console.error('Error fetching compensations:', error);
+      console.error('Error with compensations:', error);
       setCompensations([]);
     }
   };
 
   const generateTimesheet = async (employeeId: string, date: string, totalHours: number) => {
+    // Timesheets table not available in current schema
+    // Skip timesheet generation
     try {
-      // Calculate overtime (hours > 8)
-      const overtimeHours = totalHours > 8 ? totalHours - 8 : 0;
-
-      // Check if timesheet already exists
-      const { data: existingTimesheet, error: checkError } = await supabase
-        .from('timesheets')
-        .select('id')
-        .eq('employee_id', employeeId)
-        .eq('date', date)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing timesheet:', checkError);
-        return;
-      }
-
-      if (existingTimesheet) {
-        // Update existing timesheet
-        const { error: updateError } = await supabase
-          .from('timesheets')
-          .update({
-            total_hours: totalHours,
-            overtime_hours: overtimeHours,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingTimesheet.id);
-
-        if (updateError) {
-          console.error('Error updating timesheet:', updateError);
-        }
-      } else {
-        // Create new timesheet
-        const { error: insertError } = await supabase
-          .from('timesheets')
-          .insert({
-            employee_id: employeeId,
-            date: date,
-            total_hours: totalHours,
-            overtime_hours: overtimeHours,
-            status: 'pending',
-          });
-
-        if (insertError) {
-          console.error('Error creating timesheet:', insertError);
-        }
-      }
+      console.log('[TIMESHEET] Table not yet available in schema - skipping generation');
+      // Mock implementation - just log the action
+      console.log(`Would generate timesheet for employee ${employeeId} on ${date} with ${totalHours} hours`);
     } catch (error) {
       console.error('Error generating timesheet:', error);
     }
   };
 
   const fetchEmployeeData = async () => {
+    if (!authUser?.id) {
+      console.log('No auth user - cannot fetch employee data');
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('employees')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (error) {
@@ -627,12 +505,16 @@ export default function EmployeePortalPage() {
   };
 
   const fetchOnboardingTasks = async () => {
+    if (!authUser?.id) {
+      console.log('No auth user - cannot fetch onboarding tasks');
+      return;
+    }
     try {
       // Get employee record first to get employee_id
       const { data: empData, error: empError } = await supabase
         .from('employees')
         .select('id')
-        .eq('user_id', user!.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (empError || !empData) {
@@ -792,22 +674,11 @@ export default function EmployeePortalPage() {
 
     setSubmittingLeave(true);
     try {
-      const { data, error } = await supabase
-        .from('leaves')
-        .insert({
-          employee_id: employeeData.id,
-          leave_type: leaveFormData.leave_type,
-          start_date: leaveFormData.start_date,
-          end_date: leaveFormData.end_date,
-          reason: leaveFormData.reason,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Reset form
+      // Leaves table not yet available
+      toast({
+        title: 'Feature coming soon',
+        description: 'Leave request system will be available in the next release.',
+      });
       setLeaveFormData({
         leave_type: '',
         start_date: '',
@@ -815,14 +686,6 @@ export default function EmployeePortalPage() {
         reason: '',
       });
       setLeaveDialogOpen(false);
-
-      // Refresh leaves data
-      fetchLeaves(employeeData.id);
-
-      toast({
-        title: 'Leave request submitted',
-        description: 'Your leave request has been submitted for approval.',
-      });
     } catch (error) {
       console.error('Error submitting leave request:', error);
       toast({
@@ -879,43 +742,11 @@ export default function EmployeePortalPage() {
 
     setSubmittingClaim(true);
     try {
-      let receiptUrl = null;
-
-      // Upload receipt if provided
-      if (claimFormData.receipt) {
-        const fileExt = claimFormData.receipt.name.split('.').pop();
-        const fileName = `${employeeData.id}_${Date.now()}.${fileExt}`;
-        const filePath = `receipts/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('receipts')
-          .upload(filePath, claimFormData.receipt);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('receipts')
-          .getPublicUrl(filePath);
-
-        receiptUrl = publicUrl;
-      }
-
-      const { data, error } = await supabase
-        .from('claims')
-        .insert({
-          employee_id: employeeData.id,
-          claim_type: claimFormData.claim_type,
-          amount: amount,
-          description: claimFormData.description,
-          receipt_url: receiptUrl,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Reset form
+      // Claims table not yet available
+      toast({
+        title: 'Feature coming soon',
+        description: 'Expense claim system will be available in the next release.',
+      });
       setClaimFormData({
         claim_type: '',
         amount: '',
@@ -923,14 +754,6 @@ export default function EmployeePortalPage() {
         receipt: null,
       });
       setClaimDialogOpen(false);
-
-      // Refresh claims data
-      fetchClaims(employeeData.id);
-
-      toast({
-        title: 'Claim submitted',
-        description: 'Your expense claim has been submitted for approval.',
-      });
     } catch (error) {
       console.error('Error submitting claim:', error);
       toast({
@@ -989,15 +812,15 @@ export default function EmployeePortalPage() {
               </Button>
               <Avatar className="h-12 w-12">
                 <AvatarFallback className="gradient-primary text-white font-semibold">
-                  {getInitials(employeeData?.full_name || profile?.full_name)}
+                  {getInitials(employeeData?.full_name || authUser?.fullName || 'E')}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Welcome back, {employeeData?.full_name || profile?.full_name || 'Employee'}
+                  Welcome back, {employeeData?.full_name || authUser?.fullName || 'Employee'}
                 </h1>
                 <p className="text-muted-foreground">
-                  {employeeData?.position || 'Staff Member'} • {employeeData?.department || profile?.department || 'Hospital'}
+                  {employeeData?.position || 'Staff Member'} • {employeeData?.department || 'Hospital'}
                 </p>
               </div>
             </div>
@@ -1040,11 +863,11 @@ export default function EmployeePortalPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <p className="text-foreground">{employeeData.email || profile?.email}</p>
+                    <p className="text-foreground">{employeeData.email || authUser?.email}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                    <p className="text-foreground">{employeeData.phone || profile?.phone || 'Not provided'}</p>
+                    <p className="text-foreground">{employeeData.phone || 'Not provided'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Start Date</label>
@@ -1052,7 +875,7 @@ export default function EmployeePortalPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Department</label>
-                    <p className="text-foreground">{employeeData.department || profile?.department}</p>
+                    <p className="text-foreground">{employeeData.department}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Position</label>
@@ -1951,6 +1774,9 @@ export default function EmployeePortalPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Staff Login Modal - shown after sign out */}
+      <StaffLoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </div>
   );
 }
