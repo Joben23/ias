@@ -149,7 +149,7 @@ export function StaffLoginModal({ open, onOpenChange, theme = "light" }: StaffLo
       console.log("[EMAILJS] Sending OTP");
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_OTP,
         templateParams
       );
 
@@ -255,7 +255,7 @@ export function StaffLoginModal({ open, onOpenChange, theme = "light" }: StaffLo
 
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_OTP,
         templateParams
       );
 

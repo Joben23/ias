@@ -11,55 +11,63 @@ import { EmployeeProtectedRoute } from "@/components/hr/EmployeeProtectedRoute";
 import { AppLayout } from "@/components/hr/AppLayout";
 import EmployeePortalPage from "./pages/EmployeePortalPage";
 import ForceChangePasswordPage from "./pages/ForceChangePasswordPage";
-import Index from "./pages/Index";
-import ApplicantsPage from "./pages/ApplicantsPage";
-import RecruitmentPage from "./pages/RecruitmentPage";
-import OnboardingPage from "./pages/OnboardingPage";
-import EmployeeDirectoryPage from "./pages/EmployeeDirectoryPage";
-import PerformancePage from "./pages/PerformancePage";
-import RecognitionPage from "./pages/RecognitionPage";
-import InterviewsPage from "./pages/InterviewsPage";
-import CandidateRankingPage from "./pages/CandidateRankingPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
 import LandingPage from "./pages/LandingPage";
 import JobApplicationPage from "./pages/JobApplicationPage";
 import NotFound from "./pages/NotFound";
 import ComingSoonPage from "./pages/ComingSoonPage";
-import CompetencyManagementPage from "./pages/CompetencyManagementPage";
-import EmployeeCompetencyPage from "./pages/EmployeeCompetencyPage";
-import LearningManagementPage from "./pages/LearningManagementPage";
-import EmployeeLearningPage from "./pages/EmployeeLearningPage";
-import TrainingManagementPage from "./pages/TrainingManagementPage";
-import TrainingDashboardPage from "./pages/TrainingDashboardPage";
-import TrainingAssignmentPage from "./pages/TrainingAssignmentPage";
-import TrainingEvaluationPage from "./pages/TrainingEvaluationPage";
-import SuccessionPlanningDashboard from "./pages/SuccessionPlanningDashboard";
-import KeyPositionsPage from "./pages/KeyPositionsPage";
-import SuccessionCandidatesPage from "./pages/SuccessionCandidatesPage";
-import DevelopmentPlansPage from "./pages/DevelopmentPlansPage";
-import EmployeeSuccessionPage from "./pages/EmployeeSuccessionPage";
-import EssDashboardPage from "./pages/EssDashboardPage";
-import EssProfilePage from "./pages/EssProfilePage";
-import EssLearningPage from "./pages/EssLearningPage";
-import EssCompetenciesPage from "./pages/EssCompetenciesPage";
-import EssCareerPathPage from "./pages/EssCareerPathPage";
-import Hr2DashboardPage from "./pages/Hr2DashboardPage";
-import Hr3DashboardPage from "./pages/Hr3DashboardPage";
-import Hr3AttendancePage from "./pages/Hr3AttendancePage";
-import Hr3ShiftsPage from "./pages/Hr3ShiftsPage";
-import Hr3SchedulesPage from "./pages/Hr3SchedulesPage";
-import Hr3TimesheetsPage from "./pages/Hr3TimesheetsPage";
-import Hr3LeavesPage from "./pages/Hr3LeavesPage";
-import Hr3ClaimsPage from "./pages/Hr3ClaimsPage";
-import Hr4HcmPage from "./pages/Hr4HcmPage";
-import Hr4PayrollPage from "./pages/Hr4PayrollPage";
-import Hr4CompensationPage from "./pages/Hr4CompensationPage";
-import Hr4DashboardPage from "./pages/Hr4DashboardPage";
-import Hr4EmployeeCompensationPage from "./pages/Hr4EmployeeCompensationPage";
-import Hr4BenefitsPage from "./pages/Hr4BenefitsPage";
-import Hr4EmployeeBenefitsPage from "./pages/Hr4EmployeeBenefitsPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import { AuthCallback } from "./pages/AuthCallback";
+
+// HR1 - Recruitment, Onboarding, Interviews
+import Index from "@/modules/hr1/pages/Index";
+import ApplicantsPage from "@/modules/hr1/pages/ApplicantsPage";
+import RecruitmentPage from "@/modules/hr1/pages/RecruitmentPage";
+import InterviewsPage from "@/modules/hr1/pages/InterviewsPage";
+import OnboardingPage from "@/modules/hr1/pages/OnboardingPage";
+import EmployeeDirectoryPage from "@/modules/hr1/pages/EmployeeDirectoryPage";
+import CandidateRankingPage from "@/modules/hr1/pages/CandidateRankingPage";
+
+// HR2 - Learning, Training, Performance, Competency, Succession, ESS
+import Hr2DashboardPage from "@/modules/hr2/pages/Hr2DashboardPage";
+import PerformancePage from "@/modules/hr2/pages/PerformancePage";
+import RecognitionPage from "@/modules/hr2/pages/RecognitionPage";
+import CompetencyManagementPage from "@/modules/hr2/pages/CompetencyManagementPage";
+import EmployeeCompetencyPage from "@/modules/hr2/pages/EmployeeCompetencyPage";
+import LearningManagementPage from "@/modules/hr2/pages/LearningManagementPage";
+import EmployeeLearningPage from "@/modules/hr2/pages/EmployeeLearningPage";
+import TrainingManagementPage from "@/modules/hr2/pages/TrainingManagementPage";
+import TrainingDashboardPage from "@/modules/hr2/pages/TrainingDashboardPage";
+import TrainingAssignmentPage from "@/modules/hr2/pages/TrainingAssignmentPage";
+import TrainingEvaluationPage from "@/modules/hr2/pages/TrainingEvaluationPage";
+import SuccessionPlanningDashboard from "@/modules/hr2/pages/SuccessionPlanningDashboard";
+import KeyPositionsPage from "@/modules/hr2/pages/KeyPositionsPage";
+import SuccessionCandidatesPage from "@/modules/hr2/pages/SuccessionCandidatesPage";
+import DevelopmentPlansPage from "@/modules/hr2/pages/DevelopmentPlansPage";
+import EmployeeSuccessionPage from "@/modules/hr2/pages/EmployeeSuccessionPage";
+import EssDashboardPage from "@/modules/hr2/pages/EssDashboardPage";
+import EssProfilePage from "@/modules/hr2/pages/EssProfilePage";
+import EssLearningPage from "@/modules/hr2/pages/EssLearningPage";
+import EssCompetenciesPage from "@/modules/hr2/pages/EssCompetenciesPage";
+import EssCareerPathPage from "@/modules/hr2/pages/EssCareerPathPage";
+
+// HR3 - Attendance, Shifts, Schedules, Timesheets, Leaves, Claims
+import Hr3DashboardPage from "@/modules/hr3/pages/Hr3DashboardPage";
+import Hr3AttendancePage from "@/modules/hr3/pages/Hr3AttendancePage";
+import Hr3ShiftsPage from "@/modules/hr3/pages/Hr3ShiftsPage";
+import Hr3SchedulesPage from "@/modules/hr3/pages/Hr3SchedulesPage";
+import Hr3TimesheetsPage from "@/modules/hr3/pages/Hr3TimesheetsPage";
+import Hr3LeavesPage from "@/modules/hr3/pages/Hr3LeavesPage";
+import Hr3ClaimsPage from "@/modules/hr3/pages/Hr3ClaimsPage";
+
+// HR4 - HCM, Payroll, Compensation, Benefits, Analytics
+import Hr4DashboardPage from "@/modules/hr4/pages/Hr4DashboardPage";
+import Hr4HcmPage from "@/modules/hr4/pages/Hr4HcmPage";
+import Hr4PayrollPage from "@/modules/hr4/pages/Hr4PayrollPage";
+import Hr4CompensationPage from "@/modules/hr4/pages/Hr4CompensationPage";
+import Hr4BenefitsPage from "@/modules/hr4/pages/Hr4BenefitsPage";
+import Hr4EmployeeCompensationPage from "@/modules/hr4/pages/Hr4EmployeeCompensationPage";
+import Hr4EmployeeBenefitsPage from "@/modules/hr4/pages/Hr4EmployeeBenefitsPage";
+import AnalyticsPage from "@/modules/hr4/pages/AnalyticsPage";
 
 const queryClient = new QueryClient();
 

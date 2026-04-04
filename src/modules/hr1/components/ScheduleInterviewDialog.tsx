@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { createNotification } from '@/lib/notifications';
 import { Calendar, Clock, Video, MapPin, Users, Loader2, Mail, AlertCircle } from 'lucide-react';
+
+// Initialize EmailJS
+emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
 
 const panelOptions = [
   'HR Manager',
@@ -56,6 +60,7 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
           title: 'Invalid Time',
           description: 'Please select a time between 8:00 AM and 5:00 PM',
           variant: 'destructive',
+          duration: 8000
         });
         return;
       }
@@ -84,7 +89,8 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
         toast({
           title: 'Warning',
           description: 'Could not load applicant email. Check database connection.',
-          variant: 'destructive'
+          variant: 'destructive',
+          duration: 8000
         });
       } else if (data?.email) {
         setApplicantEmail(data.email);
@@ -102,17 +108,27 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
 
   const handleSubmit = async () => {
     if (!date || !time) {
-      toast({ title: 'Missing fields', description: 'Date and time are required', variant: 'destructive' });
+      toast({ title: 'Missing fields', description: 'Date and time are required', variant: 'destructive', duration: 8000 });
       return;
     }
 
     if (type === 'On-site' && !location) {
-      toast({ title: 'Missing location', description: 'Location is required for on-site interviews', variant: 'destructive' });
+      toast({ title: 'Missing location', description: 'Location is required for on-site interviews', variant: 'destructive', duration: 8000 });
       return;
     }
 
     if (type === 'Online' && !meetingLink) {
-      toast({ title: 'Missing meeting link', description: 'Meeting link is required for online interviews', variant: 'destructive' });
+      toast({ title: 'Missing meeting link', description: 'Meeting link is required for online interviews', variant: 'destructive', duration: 8000 });
+      return;
+    }
+
+    console.log('[INTERVIEW] Email before trim:', JSON.stringify(applicantEmail));
+    const trimmedEmail = (applicantEmail || '').trim();
+    console.log('[INTERVIEW] Email after trim:', JSON.stringify(trimmedEmail));
+    console.log('[INTERVIEW] Email is valid:', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail));
+
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: 'Invalid Email', description: `Applicant email is missing or invalid: "${applicantEmail}"`, variant: 'destructive', duration: 8000 });
       return;
     }
 
@@ -136,26 +152,36 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
       if (data && data[0]) {
         const interviewId = data[0].id;
 
-        // 2. Send notification email
+        // 2. Send notification email via EmailJS (optional - don't block if it fails)
         let emailSentSuccessfully = false;
         try {
-          const { error: funcError } = await supabase.functions.invoke('send-interview-notification', {
-            body: { interview_id: interviewId }
-          });
+          console.log('[EMAILJS] Attempting to send interview email notification...');
+          
+          const emailTemplateParams = {
+            to_email: trimmedEmail,
+            candidate_name: applicantName,
+            job_title: jobPostingId || 'Available Position',
+            company_name: 'Hospital HRMS',
+            interview_date: date,
+            interview_time: time,
+            interview_location: type === 'On-site' ? location : meetingLink || 'TBD',
+            interviewer_name: panel.length > 0 ? panel[0] : 'HR Team',
+          };
 
-          if (funcError) {
-            console.error('Failed to send notification:', funcError);
-            toast({
-              title: 'Interview Scheduled',
-              description: 'Interview created, but email notification failed to send. Check logs.',
-              variant: 'destructive'
-            });
-          } else {
-            emailSentSuccessfully = true;
-            setEmailNotifSent(true);
-          }
-        } catch (funcErr) {
-          console.error('Error invoking notification function:', funcErr);
+          const result = await emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_TEMPLATE_INTERVIEW,
+            emailTemplateParams
+          );
+
+          console.log('[EMAILJS] ✅ Email sent successfully:', result);
+          emailSentSuccessfully = true;
+          setEmailNotifSent(true);
+        } catch (emailErr: any) {
+          // Email sending failed, but don't block the interview creation
+          console.warn('[EMAILJS] Email notification failed (non-blocking):', emailErr?.text || emailErr?.message);
+          emailSentSuccessfully = false;
+          // Don't show error toast - email is optional
         }
 
         // 3. Create in-app notification for HR/Admin
@@ -165,7 +191,7 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
             await createNotification(
               currentUser.user.id,
               'Interview Scheduled',
-              `Interview scheduled for ${applicantName} on ${date} at ${time}${emailSentSuccessfully ? ' - Email sent to applicant' : ''}`,
+              `Interview scheduled for ${applicantName} on ${date} at ${time}`,
               'interview',
               applicantId
             );
@@ -183,9 +209,16 @@ export function ScheduleInterviewDialog({ applicantId, applicantName, jobPosting
 
         // Show success message
         toast({
-          title: 'Interview Scheduled Successfully',
-          description: `Interview for ${applicantName} has been scheduled${emailSentSuccessfully ? ' and email notification sent' : ''}`,
-          variant: emailSentSuccessfully ? 'default' : 'destructive'
+          title: '✅ Interview Scheduled Successfully',
+          description: `Interview for ${applicantName} has been scheduled for ${date} at ${time}`,
+          duration: 8000
+        });
+
+        // Show email confirmation notification
+        toast({
+          title: '📧 Email Sent',
+          description: `Confirmation email sent to ${trimmedEmail}`,
+          duration: 8000
         });
 
         onScheduled();

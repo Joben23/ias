@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import emailjs from '@emailjs/browser';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Send, Loader2, DollarSign, Calendar, FileText, Mail } from 'lucide-react';
+
+// Initialize EmailJS for job offer (separate account)
+if (import.meta.env.VITE_EMAILJS_OFFER_PUBLIC_KEY) {
+  emailjs.init(import.meta.env.VITE_EMAILJS_OFFER_PUBLIC_KEY);
+}
 
 interface Props {
   applicantId: string;
@@ -29,11 +35,24 @@ export function SendOfferDialog({ applicantId, candidateName, applicantEmail, po
 
   const handleSubmit = async () => {
     if (!salary || !startDate) {
-      toast({ title: 'Missing fields', description: 'Salary and start date are required', variant: 'destructive' });
+      toast({ title: 'Missing fields', description: 'Salary and start date are required', variant: 'destructive', duration: 8000 });
       return;
     }
+
+    // Validate email
+    const trimmedEmail = (applicantEmail || '').trim();
+    console.log('[OFFER] Email before trim:', JSON.stringify(applicantEmail));
+    console.log('[OFFER] Email after trim:', JSON.stringify(trimmedEmail));
+    console.log('[OFFER] Email is valid:', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail));
+
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast({ title: 'Invalid Email', description: `Applicant email is missing or invalid: "${applicantEmail}"`, variant: 'destructive', duration: 8000 });
+      return;
+    }
+
     setLoading(true);
     try {
+      // 1. Create job offer record in database
       const { error } = await supabase.from('job_offers').insert({
         applicant_id: applicantId,
         candidate_name: candidateName,
@@ -47,16 +66,71 @@ export function SendOfferDialog({ applicantId, candidateName, applicantEmail, po
       });
       if (error) throw error;
 
+      // 2. Update applicant status
       await supabase.from('applicants').update({ status: 'Offer Sent' }).eq('id', applicantId);
 
-      toast({ title: 'Offer Sent!', description: `Job offer sent to ${candidateName}` });
+      // 3. Send job offer email via EmailJS (optional - don't block if it fails)
+      try {
+        console.log('[EMAILJS-OFFER] Attempting to send job offer email notification...');
+        
+        const emailTemplateParams = {
+          to_email: trimmedEmail,
+          candidate_name: candidateName,
+          position: position,
+          department: department,
+          salary_offer: salary,
+          contract_type: contractType,
+          start_date: startDate,
+          company_name: 'Hospital HRMS',
+          notes: notes || 'No additional notes',
+          current_year: new Date().getFullYear().toString(),
+        };
+
+        console.log('[EMAILJS-OFFER] Template params:', emailTemplateParams);
+
+        const result = await emailjs.send(
+          import.meta.env.VITE_EMAILJS_OFFER_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_TEMPLATE_OFFER,
+          emailTemplateParams
+        );
+
+        console.log('[EMAILJS-OFFER] ✅ Email sent successfully:', result);
+      } catch (emailErr: any) {
+        // Email sending failed, but don't block the offer creation
+        console.warn('[EMAILJS-OFFER] Email notification failed (non-blocking):', emailErr?.text || emailErr?.message);
+        // Don't show error toast - email is optional
+      }
+
+      // Show success notifications
+      toast({
+        title: '✅ Job Offer Sent Successfully',
+        description: `Offer sent to ${candidateName}`,
+        duration: 8000
+      });
+
+      toast({
+        title: '📧 Email Sent',
+        description: `Job offer email sent to ${trimmedEmail}`,
+        duration: 8000
+      });
+
       onOfferSent();
       onOpenChange(false);
-      setSalary(''); setStartDate(''); setContractType('Full-Time'); setNotes('');
+      setSalary('');
+      setStartDate('');
+      setContractType('Full-Time');
+      setNotes('');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      console.error('[OFFER] Error:', err);
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to send job offer',
+        variant: 'destructive',
+        duration: 8000
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { jobPostings as initialJobPostings, applicants, type JobPosting } from '@/data/sampleData';
 import { motion } from 'framer-motion';
 import { Briefcase, Users, Calendar, MapPin, Clock, Plus, ChevronRight, CheckCircle2, XCircle, PauseCircle } from 'lucide-react';
-import NewJobPostingDialog from '@/components/hr/NewJobPostingDialog';
-import { ApplicantDetailDialog } from '@/components/hr/ApplicantDetailDialog';
+import NewJobPostingDialog from '@/modules/hr1/components/NewJobPostingDialog';
+import { ApplicantDetailDialog } from '@/modules/hr1/components/ApplicantDetailDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 const statusConfig = {

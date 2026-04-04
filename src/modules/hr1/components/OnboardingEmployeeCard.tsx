@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Briefcase, Building2, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react';
 import { OnboardingEmployee, useOnboardingTasks } from '@/hooks/useOnboarding';
-import { OnboardingChecklist } from '@/components/hr/OnboardingChecklist';
-import { OnboardingDocumentUpload } from '@/components/hr/OnboardingDocumentUpload';
-import { OrientationSection } from '@/components/hr/OrientationSection';
+import { OnboardingChecklist } from '@/modules/hr1/components/OnboardingChecklist';
+import { OnboardingDocumentUpload } from '@/modules/hr1/components/OnboardingDocumentUpload';
+import { OrientationSection } from '@/modules/hr1/components/OrientationSection';
 
 const statusSteps = ['Offer Accepted', 'Documents Submitted', 'Orientation Completed', 'Employee Activated'] as const;
 

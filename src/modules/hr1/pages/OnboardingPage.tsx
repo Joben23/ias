@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { UserPlus, FileText, BookOpen, ShieldCheck, CheckCircle2, Users } from 'lucide-react';
 import { OnboardingEmployee, useOnboardingEmployees } from '@/hooks/useOnboarding';
-import { OnboardingEmployeeCard } from '@/components/hr/OnboardingEmployeeCard';
+import { OnboardingEmployeeCard } from '@/modules/hr1/components/OnboardingEmployeeCard';
 
 export default function OnboardingPage() {
   const { data: employees = [], isLoading } = useOnboardingEmployees();

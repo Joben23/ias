@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Video, Users, ClipboardCheck, ChevronRight } from 'lucide-react';
-import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
-import { InterviewEvaluationDialog } from '@/components/hr/InterviewEvaluationDialog';
+import { ScheduleInterviewDialog } from '@/modules/hr1/components/ScheduleInterviewDialog';
+import { InterviewEvaluationDialog } from '@/modules/hr1/components/InterviewEvaluationDialog';
 import { Button } from '@/components/ui/button';
 
 interface Interview {

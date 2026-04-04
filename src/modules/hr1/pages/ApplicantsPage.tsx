@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Applicant, ApplicantStatus, Position } from '@/data/sampleData';
-import { ApplicantCard } from '@/components/hr/ApplicantCard';
-import { ApplicantDetailDialog } from '@/components/hr/ApplicantDetailDialog';
+import { ApplicantCard } from '@/modules/hr1/components/ApplicantCard';
+import { ApplicantDetailDialog } from '@/modules/hr1/components/ApplicantDetailDialog';
 import { motion } from 'framer-motion';
 import { Search, Users, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

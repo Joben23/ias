@@ -9,9 +9,9 @@ import {
   User, Mail, Phone, Briefcase, Building2, Calendar, Star, FileText, Download,
   CheckCircle2, Loader2, CalendarCheck, Send, DollarSign, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
-import { ScheduleInterviewDialog } from '@/components/hr/ScheduleInterviewDialog';
+import { ScheduleInterviewDialog } from '@/modules/hr1/components/ScheduleInterviewDialog';
 import { SendOfferDialog } from '@/components/hr/SendOfferDialog';
-import { RecruitmentTimeline } from '@/components/hr/RecruitmentTimeline';
+import { RecruitmentTimeline } from '@/modules/hr1/components/RecruitmentTimeline';
 
 const statuses: ApplicantStatus[] = [
   'Applied', 'Under Screening', 'Shortlisted', 'Interview Scheduled', 'Interview Completed', 'Selected',
