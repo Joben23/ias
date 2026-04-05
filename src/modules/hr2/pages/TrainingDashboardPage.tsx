@@ -26,6 +26,7 @@ interface EmployeeTraining {
 
 interface SkillGap {
   employee_id: string;
+  employee_name?: string;
   competency_name: string;
   current_level: number;
   target_level: number;
@@ -116,7 +117,7 @@ export function TrainingDashboardPage() {
 
       // Fetch skill gaps
       try {
-        const { data: gapData, error: gapError } = await supabase.rpc('get_employees_with_skill_gaps');
+        const { data: gapData, error: gapError } = await supabase.rpc('get_employees_with_skill_gaps' as any);
 
         if (gapError) {
           console.error('Error fetching skill gaps:', gapError);
@@ -178,28 +179,28 @@ export function TrainingDashboardPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Assigned':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300';
       case 'In Progress':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300';
       case 'Completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300';
       case 'Missed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-slate-300';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'Medical':
-        return 'bg-red-50 border-red-200';
+        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
       case 'Technical':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
       case 'Soft Skills':
-        return 'bg-purple-50 border-purple-200';
+        return 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700';
     }
   };
 
@@ -207,8 +208,8 @@ export function TrainingDashboardPage() {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">Loading training dashboard...</p>
+          <BookOpen className="h-12 w-12 text-gray-400 dark:text-slate-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-slate-400">Loading training dashboard...</p>
         </div>
       </div>
     );
@@ -218,30 +219,30 @@ export function TrainingDashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-gray-900">Training Dashboard</h1>
-        <p className="text-gray-600 mt-1">Overview of training programs, assignments, and effectiveness</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Training Dashboard</h1>
+        <p className="text-gray-600 dark:text-slate-400 mt-1">Overview of training programs, assignments, and effectiveness</p>
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Trainings Card */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-gray-600 dark:text-slate-400 flex items-center gap-2">
+              <BookOpen className="h-3 w-3" />
               Total Assignments
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalAssignments}</div>
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">Ongoing</span>
-                <span className="font-semibold text-blue-600">{stats.ongoingCount}</span>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalAssignments}</div>
+            <div className="mt-2 space-y-1">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-600 dark:text-slate-400">Ongoing</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">{stats.ongoingCount}</span>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">Completed</span>
-                <span className="font-semibold text-green-600">{stats.completedCount}</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-600 dark:text-slate-400">Completed</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">{stats.completedCount}</span>
               </div>
             </div>
           </CardContent>
@@ -249,16 +250,16 @@ export function TrainingDashboardPage() {
 
         {/* Completion Rate Card */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-gray-600 dark:text-slate-400 flex items-center gap-2">
+              <TrendingUp className="h-3 w-3" />
               Completion Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.completionRate}%</div>
-            <Progress value={stats.completionRate} className="mt-4" />
-            <p className="text-xs text-gray-500 mt-2">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completionRate}%</div>
+            <Progress value={stats.completionRate} className="mt-2 h-1" />
+            <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
               {stats.completedCount} of {stats.totalAssignments} completed
             </p>
           </CardContent>
@@ -266,16 +267,16 @@ export function TrainingDashboardPage() {
 
         {/* Skill Gaps Card */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-gray-600 dark:text-slate-400 flex items-center gap-2">
+              <AlertCircle className="h-3 w-3" />
               Employees with Gaps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">{stats.skillGapsCount}</div>
-            <p className="text-sm text-gray-600 mt-2">Need skill development</p>
-            <Button variant="outline" size="sm" className="mt-3 w-full">
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.skillGapsCount}</div>
+            <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">Need skill development</p>
+            <Button variant="outline" size="sm" className="mt-2 w-full text-xs h-7">
               View Details
             </Button>
           </CardContent>
@@ -283,42 +284,42 @@ export function TrainingDashboardPage() {
 
         {/* Avg Training Hours */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-              <Clock className="h-4 w-4" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-gray-600 dark:text-slate-400 flex items-center gap-2">
+              <Clock className="h-3 w-3" />
               Avg Hours per Training
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.avgTrainingHours}h</div>
-            <p className="text-sm text-gray-600 mt-2">Investment per employee</p>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.avgTrainingHours}h</div>
+            <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">Investment per employee</p>
           </CardContent>
         </Card>
 
         {/* Summary Stats */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Training Summary</CardTitle>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-gray-600 dark:text-slate-400">Training Summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Employees Trained</span>
-              <span className="font-bold text-lg">{Math.round(stats.totalAssignments / 2)}</span>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-600 dark:text-slate-400">Employees Trained</span>
+              <span className="font-bold text-gray-900 dark:text-white">{Math.round(stats.totalAssignments / 2)}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Training Hours</span>
-              <span className="font-bold text-lg">{Math.round(stats.avgTrainingHours * stats.totalAssignments)}h</span>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-600 dark:text-slate-400">Total Training Hours</span>
+              <span className="font-bold text-gray-900 dark:text-white">{Math.round(stats.avgTrainingHours * stats.totalAssignments)}h</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Training Types</span>
-              <span className="font-bold text-lg">3</span>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-600 dark:text-slate-400">Training Types</span>
+              <span className="font-bold text-gray-900 dark:text-white">3</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Upcoming Trainings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Upcoming Trainings */}
         <Card>
           <CardHeader>
@@ -330,14 +331,14 @@ export function TrainingDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {upcomingTrainings.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4">No upcoming trainings</p>
+              <p className="text-sm text-gray-500 dark:text-slate-500 py-4">No upcoming trainings</p>
             ) : (
               upcomingTrainings.map((training) => (
                 <div key={training.id} className={`p-3 rounded-lg border ${getTypeColor(training.training.training_type)}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm text-gray-900">{training.training.name}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{training.training.duration_hours}h duration</p>
+                      <h4 className="font-medium text-sm text-gray-900 dark:text-white">{training.training.name}</h4>
+                      <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">{training.training.duration_hours}h duration</p>
                     </div>
                     <Badge className={getStatusColor(training.status)}>{training.status}</Badge>
                   </div>
@@ -358,19 +359,19 @@ export function TrainingDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {recommendedTrainings.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4">No recommendations yet</p>
+              <p className="text-sm text-gray-500 dark:text-slate-500 py-4">No recommendations yet</p>
             ) : (
               recommendedTrainings.map((training) => (
-                <div key={training.id} className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div key={training.id} className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="font-medium text-sm text-gray-900">{training.name}</h4>
+                    <h4 className="font-medium text-sm text-gray-900 dark:text-white">{training.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {training.type}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <Users className="h-3 w-3 text-gray-400" />
-                    <span className="text-gray-600">{training.affectedEmployees} employees affected</span>
+                    <Users className="h-3 w-3 text-gray-400 dark:text-slate-500" />
+                    <span className="text-gray-600 dark:text-slate-400">{training.affectedEmployees} employees affected</span>
                   </div>
                 </div>
               ))
@@ -392,20 +393,20 @@ export function TrainingDashboardPage() {
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {skillGaps.slice(0, 10).map((gap, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                <div key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{gap.employee_name}</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{gap.employee_name || 'Employee'}</p>
+                    <p className="text-xs text-gray-600 dark:text-slate-400">
                       {gap.competency_name}: {gap.current_level} → {gap.target_level} (Gap: {gap.gap_level})
                     </p>
                   </div>
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-800">
+                  <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                     Gap {gap.gap_level}
                   </Badge>
                 </div>
               ))}
               {skillGaps.length > 10 && (
-                <p className="text-xs text-gray-500 p-2 text-center">+{skillGaps.length - 10} more gaps...</p>
+                <p className="text-xs text-gray-500 dark:text-slate-500 p-2 text-center">+{skillGaps.length - 10} more gaps...</p>
               )}
             </div>
           </CardContent>

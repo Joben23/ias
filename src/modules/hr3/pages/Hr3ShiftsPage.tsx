@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +7,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -25,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Clock } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface Shift {
   id: string;
@@ -35,9 +34,32 @@ interface Shift {
   created_at: string;
 }
 
+const mockShifts: Shift[] = [
+  {
+    id: 'SHIFT-001',
+    name: 'Morning Shift',
+    start_time: '07:00',
+    end_time: '15:00',
+    created_at: '2026-04-01',
+  },
+  {
+    id: 'SHIFT-002',
+    name: 'Afternoon Shift',
+    start_time: '15:00',
+    end_time: '23:00',
+    created_at: '2026-04-01',
+  },
+  {
+    id: 'SHIFT-003',
+    name: 'Night Shift',
+    start_time: '23:00',
+    end_time: '07:00',
+    created_at: '2026-04-01',
+  },
+];
+
 export default function Hr3ShiftsPage() {
-  const [shifts, setShifts] = useState<Shift[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [shifts, setShifts] = useState<Shift[]>(mockShifts);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [formData, setFormData] = useState({
@@ -45,32 +67,7 @@ export default function Hr3ShiftsPage() {
     start_time: '',
     end_time: '',
   });
-
-  const fetchShifts = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('shifts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setShifts(data || []);
-    } catch (error) {
-      console.error('Error fetching shifts:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load shifts',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchShifts();
-  }, []);
+  const { toast } = useToast();
 
   const resetForm = () => {
     setFormData({
@@ -81,7 +78,7 @@ export default function Hr3ShiftsPage() {
     setEditingShift(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || !formData.start_time || !formData.end_time) {
@@ -93,54 +90,39 @@ export default function Hr3ShiftsPage() {
       return;
     }
 
-    try {
-      if (editingShift) {
-        // Update existing shift
-        const { error } = await supabase
-          .from('shifts')
-          .update({
+    if (editingShift) {
+      // Update existing shift
+      setShifts(shifts.map(s => s.id === editingShift.id
+        ? {
+            ...editingShift,
             name: formData.name,
             start_time: formData.start_time,
             end_time: formData.end_time,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingShift.id);
-
-        if (error) throw error;
-
-        toast({
-          title: 'Success',
-          description: 'Shift updated successfully',
-        });
-      } else {
-        // Create new shift
-        const { error } = await supabase
-          .from('shifts')
-          .insert({
-            name: formData.name,
-            start_time: formData.start_time,
-            end_time: formData.end_time,
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: 'Success',
-          description: 'Shift created successfully',
-        });
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      fetchShifts();
-    } catch (error) {
-      console.error('Error saving shift:', error);
+          }
+        : s
+      ));
       toast({
-        title: 'Error',
-        description: 'Failed to save shift',
-        variant: 'destructive',
+        title: 'Success',
+        description: 'Shift updated successfully',
+      });
+    } else {
+      // Create new shift
+      const newShift: Shift = {
+        id: `SHIFT-${String(shifts.length + 1).padStart(3, '0')}`,
+        name: formData.name,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        created_at: new Date().toISOString().split('T')[0],
+      };
+      setShifts([...shifts, newShift]);
+      toast({
+        title: 'Success',
+        description: 'Shift created successfully',
       });
     }
+
+    setDialogOpen(false);
+    resetForm();
   };
 
   const handleEdit = (shift: Shift) => {
@@ -153,29 +135,12 @@ export default function Hr3ShiftsPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (shiftId: string) => {
-    try {
-      const { error } = await supabase
-        .from('shifts')
-        .delete()
-        .eq('id', shiftId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'Shift deleted successfully',
-      });
-
-      fetchShifts();
-    } catch (error) {
-      console.error('Error deleting shift:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete shift',
-        variant: 'destructive',
-      });
-    }
+  const handleDelete = (shiftId: string) => {
+    setShifts(shifts.filter(s => s.id !== shiftId));
+    toast({
+      title: 'Success',
+      description: 'Shift deleted successfully',
+    });
   };
 
   const formatTime = (timeString: string) => {
@@ -288,11 +253,7 @@ export default function Hr3ShiftsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">Loading shifts...</p>
-            </div>
-          ) : shifts.length === 0 ? (
+          {shifts.length === 0 ? (
             <div className="text-center py-8">
               <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No shifts configured yet</p>

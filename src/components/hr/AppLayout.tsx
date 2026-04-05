@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Briefcase, UserPlus, BarChart3, Award,
   HeartPulse, Search, ChevronRight, Moon, Sun, CalendarCheck, Trophy, PieChart,
-  BookOpen, GraduationCap, Target, UserCheck, ChevronDown, Check, Clock,
-  CheckCircle, Calendar, DollarSign,
+  BookOpen, GraduationCap, Target, UserCheck, Clock,
+  CheckCircle, Calendar, DollarSign, Zap, TrendingUp, Banknote, ClipboardCheck,
 } from 'lucide-react';
 import { ProfileDropdown } from '@/components/hr/ProfileDropdown';
 import { NotificationBell } from '@/components/hr/NotificationBell';
@@ -22,16 +22,10 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { NavLink } from '@/components/NavLink';
 import { useTheme } from '@/components/ThemeProvider';
 import { useHRModule, HR_MODULES, type HRModule } from '@/contexts/HRModuleContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Navigation configurations for different HR modules
 const getNavigationConfig = (hrModule: HRModule) => {
@@ -107,71 +101,121 @@ const externalLinks = [
 function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { selectedModule, setSelectedModule, currentModuleInfo } = useHRModule();
+  const { selectedModule, setSelectedModule } = useHRModule();
   const navigate = useNavigate();
+  const { authUser } = useAuth();
   const navConfig = getNavigationConfig(selectedModule);
+
+  // Get modules accessible to the user based on their roles
+  const getAccessibleModules = () => {
+    if (!authUser) return [];
+    
+    const modules: HRModule[] = [];
+    
+    // HR1: Recruiters / HR Admin - admin, hr, recruiter roles
+    if (['admin', 'hr', 'recruiter'].some(role => authUser.roles.includes(role))) {
+      modules.push('hr1');
+    }
+    
+    // HR2: Employees, HR staff - employee, hr, admin roles
+    if (['employee', 'hr', 'admin'].some(role => authUser.roles.includes(role))) {
+      modules.push('hr2');
+    }
+    
+    // HR3: All employees - employee, hr, admin roles
+    if (['employee', 'hr', 'admin'].some(role => authUser.roles.includes(role))) {
+      modules.push('hr3');
+    }
+    
+    // HR4: Admin / HR Manager only - admin, hr_manager roles
+    if (['admin', 'hr_manager', 'hr'].some(role => authUser.roles.includes(role))) {
+      modules.push('hr4');
+    }
+    
+    return modules;
+  };
+
+  const accessibleModules = getAccessibleModules();
 
   const handleModuleSwitch = (moduleId: HRModule) => {
     setSelectedModule(moduleId);
-    // Navigate to the appropriate default page for each module
-    if (moduleId === 'hr1') {
-      navigate('/hr1/dashboard');
-    } else if (moduleId === 'hr2') {
-      navigate('/hr2/dashboard');
-    } else if (moduleId === 'hr3') {
-      navigate('/hr3/dashboard');
-    } else if (moduleId === 'hr4') {
-      navigate('/hr4/dashboard'); // HR4 default page is Dashboard
-    }
+    navigate(`/${moduleId}/dashboard`);
+  };
+
+  // Module icons for quick identification
+  const moduleIcons: Record<HRModule, React.ReactNode> = {
+    hr1: <Zap className="w-4 h-4" />,
+    hr2: <TrendingUp className="w-4 h-4" />,
+    hr3: <ClipboardCheck className="w-4 h-4" />,
+    hr4: <Banknote className="w-4 h-4" />,
   };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      {/* HR Module Selector */}
+      {/* Logo & System Name */}
       <div className={`p-4 flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
         <div className="gradient-primary p-2 rounded-xl shrink-0">
           <HeartPulse className="w-5 h-5 text-primary-foreground" />
         </div>
-        {!collapsed ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex-1 justify-start p-0 h-auto font-display font-bold text-sidebar-foreground text-sm leading-tight hover:bg-transparent min-w-0"
-              >
-                <div className="text-left min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="truncate">{currentModuleInfo.name}</span>
-                    <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
-                  </div>
-                  <p className="text-[11px] text-sidebar-foreground/50 truncate">Hospital HR System</p>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
-              {Object.values(HR_MODULES).filter(module => module.available).map((module) => (
-                <DropdownMenuItem
-                  key={module.id}
-                  onClick={() => handleModuleSwitch(module.id)}
-                  className="flex items-center gap-3 p-3"
-                >
-                  <div className="flex-1">
-                    <div className="font-medium">{module.name}</div>
-                    <div className="text-sm text-muted-foreground">{module.description}</div>
-                  </div>
-                  {selectedModule === module.id && (
-                    <Check className="w-4 h-4 text-primary" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="w-5 h-5 bg-primary/20 rounded" />
+        {!collapsed && (
+          <div className="flex-1 min-w-0">
+            <div className="font-display font-bold text-sidebar-foreground text-sm">
+              HR System
+            </div>
+            <p className="text-[11px] text-sidebar-foreground/50">HRMS Platform</p>
+          </div>
         )}
       </div>
 
       <SidebarContent>
+        {/* HR Modules - Direct Navigation */}
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">
+              Available Modules
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {accessibleModules.map((moduleId) => {
+                const module = HR_MODULES[moduleId];
+                const isActive = selectedModule === moduleId;
+                const modulePath = `/${moduleId}/dashboard`;
+                
+                return (
+                  <SidebarMenuItem key={moduleId}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={collapsed ? module.name : undefined}
+                      className={isActive ? 'bg-sidebar-primary/20' : ''}
+                    >
+                      <button
+                        onClick={() => handleModuleSwitch(moduleId)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                          isActive
+                            ? 'bg-sidebar-primary/15 text-sidebar-primary font-medium'
+                            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        }`}
+                      >
+                        {moduleIcons[moduleId]}
+                        {!collapsed && (
+                          <div className="flex-1 text-left min-w-0">
+                            <div className="font-medium text-sm">{module.name.split('–')[0].trim()}</div>
+                            <div className="text-xs text-sidebar-foreground/50">{module.subtitle}</div>
+                          </div>
+                        )}
+                        {isActive && !collapsed && (
+                          <div className="w-2 h-2 rounded-full bg-sidebar-primary shrink-0 ml-2" />
+                        )}
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Dashboard */}
         <SidebarGroup>
           <SidebarGroupContent>

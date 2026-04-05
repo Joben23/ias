@@ -8,6 +8,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { HRModuleProvider } from "@/contexts/HRModuleContext";
 import { ProtectedRoute } from "@/components/hr/ProtectedRoute";
 import { EmployeeProtectedRoute } from "@/components/hr/EmployeeProtectedRoute";
+import { HR1ProtectedRoute } from "@/components/hr/HR1ProtectedRoute";
+import { HR2ProtectedRoute } from "@/components/hr/HR2ProtectedRoute";
+import { HR3ProtectedRoute } from "@/components/hr/HR3ProtectedRoute";
+import { HR4ProtectedRoute } from "@/components/hr/HR4ProtectedRoute";
 import { AppLayout } from "@/components/hr/AppLayout";
 import EmployeePortalPage from "./pages/EmployeePortalPage";
 import ForceChangePasswordPage from "./pages/ForceChangePasswordPage";
@@ -44,17 +48,12 @@ import KeyPositionsPage from "@/modules/hr2/pages/KeyPositionsPage";
 import SuccessionCandidatesPage from "@/modules/hr2/pages/SuccessionCandidatesPage";
 import DevelopmentPlansPage from "@/modules/hr2/pages/DevelopmentPlansPage";
 import EmployeeSuccessionPage from "@/modules/hr2/pages/EmployeeSuccessionPage";
-import EssDashboardPage from "@/modules/hr2/pages/EssDashboardPage";
-import EssProfilePage from "@/modules/hr2/pages/EssProfilePage";
-import EssLearningPage from "@/modules/hr2/pages/EssLearningPage";
-import EssCompetenciesPage from "@/modules/hr2/pages/EssCompetenciesPage";
-import EssCareerPathPage from "@/modules/hr2/pages/EssCareerPathPage";
+import EmployeeSelfServicePage from "@/modules/hr2/pages/EmployeeSelfServicePage";
 
 // HR3 - Attendance, Shifts, Schedules, Timesheets, Leaves, Claims
 import Hr3DashboardPage from "@/modules/hr3/pages/Hr3DashboardPage";
 import Hr3AttendancePage from "@/modules/hr3/pages/Hr3AttendancePage";
-import Hr3ShiftsPage from "@/modules/hr3/pages/Hr3ShiftsPage";
-import Hr3SchedulesPage from "@/modules/hr3/pages/Hr3SchedulesPage";
+import ShiftAndScheduleManagementPage from "@/modules/hr3/pages/ShiftAndScheduleManagementPage";
 import Hr3TimesheetsPage from "@/modules/hr3/pages/Hr3TimesheetsPage";
 import Hr3LeavesPage from "@/modules/hr3/pages/Hr3LeavesPage";
 import Hr3ClaimsPage from "@/modules/hr3/pages/Hr3ClaimsPage";
@@ -104,7 +103,7 @@ const App = () => (
                 <Route
                   path="/hr1/*"
                   element={
-                    <ProtectedRoute>
+                    <HR1ProtectedRoute>
                       <AppLayout>
                         <Routes>
                           <Route path="dashboard" element={<Index />} />
@@ -120,15 +119,15 @@ const App = () => (
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HR1ProtectedRoute>
                   }
                 />
 
-                {/* HR2 Routes - Coming Soon Pages */}
+                {/* HR2 Routes - Talent Development */}
                 <Route
                   path="/hr2/*"
                   element={
-                    <ProtectedRoute>
+                    <HR2ProtectedRoute>
                       <AppLayout>
                         <Routes>
                           <Route path="dashboard" element={<Hr2DashboardPage />} />
@@ -143,46 +142,42 @@ const App = () => (
                           <Route path="succession/candidates" element={<SuccessionCandidatesPage />} />
                           <Route path="succession/development" element={<DevelopmentPlansPage />} />
                           <Route path="succession/:employeeId" element={<EmployeeSuccessionPage />} />
-                          <Route path="ess" element={<EssDashboardPage />} />
-                          <Route path="ess/profile" element={<EssProfilePage />} />
-                          <Route path="ess/learning" element={<EssLearningPage />} />
-                          <Route path="ess/competencies" element={<EssCompetenciesPage />} />
-                          <Route path="ess/career" element={<EssCareerPathPage />} />
+                          <Route path="ess" element={<EmployeeSelfServicePage />} />
                           <Route path="competency" element={<CompetencyManagementPage />} />
                           <Route path="competency/:employeeId" element={<EmployeeCompetencyPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HR2ProtectedRoute>
                   }
                 />
 
-                {/* HR3 Routes - Workforce Operations & Time Management */}
+                {/* HR3 Routes - Workforce Operations */}
                 <Route
                   path="/hr3/*"
                   element={
-                    <ProtectedRoute>
+                    <HR3ProtectedRoute>
                       <AppLayout>
                         <Routes>
                           <Route path="dashboard" element={<Hr3DashboardPage />} />
                           <Route path="attendance" element={<Hr3AttendancePage />} />
-                          <Route path="shifts" element={<Hr3ShiftsPage />} />
-                          <Route path="schedules" element={<Hr3SchedulesPage />} />
+                          <Route path="shifts" element={<ShiftAndScheduleManagementPage />} />
+                          <Route path="schedules" element={<ShiftAndScheduleManagementPage />} />
                           <Route path="timesheets" element={<Hr3TimesheetsPage />} />
                           <Route path="leaves" element={<Hr3LeavesPage />} />
                           <Route path="claims" element={<Hr3ClaimsPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HR3ProtectedRoute>
                   }
                 />
 
-                {/* HR4 Routes - Human Capital Management */}
+                {/* HR4 Routes - Compensation & HR Intelligence */}
                 <Route
                   path="/hr4/*"
                   element={
-                    <ProtectedRoute>
+                    <HR4ProtectedRoute>
                       <AppLayout>
                         <Routes>
                           <Route path="/" element={<Navigate to="/hr4/dashboard" replace />} />
@@ -196,7 +191,7 @@ const App = () => (
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HR4ProtectedRoute>
                   }
                 />
 
@@ -204,7 +199,7 @@ const App = () => (
                 <Route
                   path="/dashboard/*"
                   element={
-                    <ProtectedRoute>
+                    <HR1ProtectedRoute>
                       <AppLayout>
                         <Routes>
                           <Route path="/" element={<Index />} />
@@ -220,7 +215,7 @@ const App = () => (
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HR1ProtectedRoute>
                   }
                 />
 
